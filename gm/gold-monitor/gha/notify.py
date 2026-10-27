@@ -12,6 +12,11 @@ from datetime import date, datetime
 from email.message import EmailMessage
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+# 脚本若在 gha/ 子目录里，数据在上一级
+if not os.path.exists(os.path.join(BASE, "data.json")):
+    _up = os.path.dirname(BASE)
+    if os.path.exists(os.path.join(_up, "data.json")):
+        BASE = _up
 os.chdir(BASE)
 
 STATE_FILE = "alert_state.json"
@@ -72,7 +77,6 @@ def send_mail(title, desp, user, pwd, to, host="smtp.qq.com", port=465):
 
 
 def main():
-    today = date.today().isoformat()
     st = load(STATE_FILE, {}) or {}
 
     yseq = load("yellow_seq.json", {}) or {}
@@ -82,6 +86,8 @@ def main():
 
     kl = data.get("kline") or []
     last_bar = kl[-1]["d"] if kl else ""
+    # 以最新行情日期为准（服务器是 UTC，直接取本地日期会差 8 小时）
+    today = last_bar or date.today().isoformat()
     price = kl[-1]["c"] if kl else 0
     ma60 = ma.get("ma60") or 0
     gap60 = ma.get("gap60") or 0
