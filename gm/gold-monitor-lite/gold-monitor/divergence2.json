@@ -1,0 +1,94 @@
+[
+ {
+  "date": "2026-02-02",
+  "low": 4401.58,
+  "dif": 169.3212944037714,
+  "swing": {
+   "prev_date": "2025-12-31",
+   "prev_low": 4274.44,
+   "prev_dif": 65.5197793749121,
+   "lower_low": false,
+   "higher_dif": true,
+   "is": false
+  },
+  "area": {
+   "prev2_date": "2025-11-18",
+   "area_now": 57.96447187424215,
+   "area_prev": 72.38981358960497,
+   "lower_low": false,
+   "smaller_area": true,
+   "is": false
+  },
+  "confirmed": true,
+  "prev_pivot": "2025-12-31"
+ },
+ {
+  "date": "2026-03-23",
+  "low": 4099.02,
+  "dif": -101.64563707638536,
+  "swing": {
+   "prev_date": "2026-03-03",
+   "prev_low": 4996.33,
+   "prev_dif": 105.57860106177304,
+   "lower_low": true,
+   "higher_dif": false,
+   "is": false
+  },
+  "area": {
+   "prev2_date": "2026-02-17",
+   "area_now": 921.3068310812268,
+   "area_prev": 141.42416332588456,
+   "lower_low": true,
+   "smaller_area": false,
+   "is": false
+  },
+  "confirmed": true,
+  "prev_pivot": "2026-03-03"
+ },
+ {
+  "date": "2026-06-24",
+  "low": 3959.04,
+  "dif": -115.85303668171491,
+  "swing": {
+   "prev_date": "2026-06-11",
+   "prev_low": 4023.85,
+   "prev_dif": -109.07694828348576,
+   "lower_low": true,
+   "higher_dif": false,
+   "is": false
+  },
+  "area": {
+   "prev2_date": "2026-05-28",
+   "area_now": 179.67898535806037,
+   "area_prev": 255.52699484686312,
+   "lower_low": true,
+   "smaller_area": true,
+   "is": true
+  },
+  "confirmed": true,
+  "prev_pivot": "2026-06-11"
+ },
+ {
+  "date": "2026-10-23",
+  "low": 3975.7,
+  "dif": -57.161978081259804,
+  "swing": {
+   "prev_date": "2026-10-07",
+   "prev_low": 4066.36,
+   "prev_dif": -61.95812682149335,
+   "lower_low": true,
+   "higher_dif": true,
+   "is": true
+  },
+  "area": {
+   "prev2_date": "2026-09-28",
+   "area_now": 59.721144583969604,
+   "area_prev": 277.01316368048776,
+   "lower_low": true,
+   "smaller_area": true,
+   "is": true
+  },
+  "confirmed": false,
+  "prev_pivot": "2026-10-07"
+ }
+]

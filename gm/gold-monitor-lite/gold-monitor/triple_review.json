@@ -1,0 +1,190 @@
+[
+ {
+  "date": "2026-01-29",
+  "high": 5596.33,
+  "close": 5377.14,
+  "tag": "绝对大顶",
+  "seg_start": "2026-01-29",
+  "trail": 5161.64,
+  "top": {
+   "date": "2026-01-29",
+   "days": 0,
+   "score": 3,
+   "close": 5377.14,
+   "space": true,
+   "mom": false,
+   "pat": true,
+   "vol": true,
+   "pos120": 90.4,
+   "dev20": 13.31,
+   "us": 35.4,
+   "vr": 2.18
+  },
+  "trail_hit": {
+   "date": "2026-01-30",
+   "days": 1,
+   "close": 4860.39,
+   "dev10": -2.85
+  },
+  "first_below": {
+   "date": "2026-01-30",
+   "days": 1
+  },
+  "ma60": {
+   "date": "2026-03-18",
+   "days": 34,
+   "close": 4818.83,
+   "before": false
+  },
+  "ma60_before": false,
+  "first": {
+   "module": "逃顶紫灯",
+   "date": "2026-01-29",
+   "price": 5377.14
+  },
+  "low": 4099.02,
+  "low_day": "2026-03-23",
+  "drop": -23.77,
+  "avoid": 31.18
+ },
+ {
+  "date": "2026-03-02",
+  "high": 5419.01,
+  "close": 5321.97,
+  "tag": "第一波诱多反弹顶",
+  "seg_start": "2026-01-29",
+  "trail": 5174.02,
+  "top": null,
+  "trail_hit": {
+   "date": "2026-03-03",
+   "days": 1,
+   "close": 5088.16,
+   "dev10": -1.16
+  },
+  "first_below": {
+   "date": "2026-03-03",
+   "days": 1
+  },
+  "ma60": {
+   "date": "2026-03-18",
+   "days": 12,
+   "close": 4818.83,
+   "before": false
+  },
+  "ma60_before": false,
+  "first": {
+   "module": "止盈线+MA10",
+   "date": "2026-03-03",
+   "price": 5088.16
+  },
+  "low": 4099.02,
+  "low_day": "2026-03-23",
+  "drop": -22.98,
+  "avoid": 24.13
+ },
+ {
+  "date": "2026-04-17",
+  "high": 4889.24,
+  "close": 4834.02,
+  "tag": "次高反弹",
+  "seg_start": "2026-01-29",
+  "trail": 5174.02,
+  "top": null,
+  "trail_hit": {
+   "date": "2026-04-21",
+   "days": 2,
+   "close": 4719.89,
+   "dev10": -1.2
+  },
+  "first_below": {
+   "date": "2026-04-20",
+   "days": 1
+  },
+  "ma60": {
+   "date": "2026-03-18",
+   "days": -21,
+   "close": 4818.83,
+   "before": true
+  },
+  "ma60_before": true,
+  "first": {
+   "module": "顶点前已破MA60",
+   "date": "2026-03-18",
+   "price": 4818.83
+  },
+  "low": 3943.65,
+  "low_day": "2026-06-30",
+  "drop": -18.42,
+  "avoid": 22.19
+ },
+ {
+  "date": "2026-05-12",
+  "high": 4773.37,
+  "close": 4715.07,
+  "tag": "破MA60后反弹次高",
+  "seg_start": "2026-01-29",
+  "trail": 5174.02,
+  "top": null,
+  "trail_hit": {
+   "date": "2026-05-14",
+   "days": 2,
+   "close": 4652.27,
+   "dev10": -0.12
+  },
+  "first_below": {
+   "date": "2026-05-13",
+   "days": 1
+  },
+  "ma60": {
+   "date": "2026-03-18",
+   "days": -38,
+   "close": 4818.83,
+   "before": true
+  },
+  "ma60_before": true,
+  "first": {
+   "module": "顶点前已破MA60",
+   "date": "2026-03-18",
+   "price": 4818.83
+  },
+  "low": 3943.65,
+  "low_day": "2026-06-30",
+  "drop": -16.36,
+  "avoid": 22.19
+ },
+ {
+  "date": "2026-08-25",
+  "high": 4696.59,
+  "close": 4658.65,
+  "tag": "W浪高点",
+  "seg_start": "2026-08-25",
+  "trail": 4394.17,
+  "top": null,
+  "trail_hit": {
+   "date": "2026-09-01",
+   "days": 5,
+   "close": 4328.08,
+   "dev10": -4.63
+  },
+  "first_below": {
+   "date": "2026-09-01",
+   "days": 5
+  },
+  "ma60": {
+   "date": "2026-09-24",
+   "days": 22,
+   "close": 4273.76,
+   "before": false
+  },
+  "ma60_before": false,
+  "first": {
+   "module": "止盈线+MA10",
+   "date": "2026-09-01",
+   "price": 4328.08
+  },
+  "low": 3975.7,
+  "low_day": "2026-10-23",
+  "drop": -14.66,
+  "avoid": 8.86
+ }
+]
