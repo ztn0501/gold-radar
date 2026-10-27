@@ -10,13 +10,13 @@
   "lower_shadow": 254.8800000000001,
   "lower_shadow_pct": 5.473686018992971,
   "lower_share": 52.785486476411435,
-  "dif": 169.3212944037714,
-  "dea": 175.2888299974869,
-  "hist": -11.935071187431049,
+  "dif": 169.32128794150958,
+  "dea": 175.28882049416046,
+  "hist": -11.93506510530176,
   "div": {
    "prev_date": "2025-11-06",
    "prev_low": 3964.55,
-   "prev_dif": 20.68902257834452,
+   "prev_dif": 20.688368229577463,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -46,8 +46,8 @@
   ],
   "div_area": {
    "prev2_date": "2025-11-18",
-   "area_now": 57.96447187424215,
-   "area_prev": 72.38981358960497,
+   "area_now": 57.96435627420061,
+   "area_prev": 72.38841632578671,
    "lower_low": false,
    "smaller_area": true,
    "is": false
@@ -55,7 +55,7 @@
   "div_swing": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.5197793749121,
+   "prev_dif": 65.51974424256241,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -73,13 +73,13 @@
   "lower_shadow": 307.6199999999999,
   "lower_shadow_pct": 6.980828930886114,
   "lower_share": 70.40164778578784,
-  "dif": -101.64563707638536,
-  "dea": -10.451962711139807,
-  "hist": -182.3873487304911,
+  "dif": -101.64563751345759,
+  "dea": -10.45196335389393,
+  "hist": -182.3873483191273,
   "div": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.5197793749121,
+   "prev_dif": 65.51974424256241,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -109,8 +109,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-02-17",
-   "area_now": 921.3068310812268,
-   "area_prev": 141.42416332588456,
+   "area_now": 921.3068211201243,
+   "area_prev": 141.42415291082108,
    "lower_low": true,
    "smaller_area": false,
    "is": false
@@ -118,7 +118,7 @@
   "div_swing": {
    "prev_date": "2026-03-03",
    "prev_low": 4996.33,
-   "prev_dif": 105.57860106177304,
+   "prev_dif": 105.57859977800581,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -136,13 +136,13 @@
   "lower_shadow": 39.909999999999854,
   "lower_shadow_pct": 0.9980119781442592,
   "lower_share": 25.611243021241016,
-  "dif": -115.85303668171491,
-  "dea": -100.55098418999769,
-  "hist": -30.60410498343444,
+  "dif": -115.85303668443794,
+  "dea": -100.55098419399991,
+  "hist": -30.60410498087606,
   "div": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694828348576,
+   "prev_dif": -109.07694828892454,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -172,8 +172,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-05-28",
-   "area_now": 179.67898535806037,
-   "area_prev": 255.52699484686312,
+   "area_now": 179.67898532610565,
+   "area_prev": 255.52699477273833,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -181,7 +181,7 @@
   "div_swing": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694828348576,
+   "prev_dif": -109.07694828892454,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -199,13 +199,13 @@
   "lower_shadow": 22.090000000000146,
   "lower_shadow_pct": 0.5525552867959584,
   "lower_share": 38.23783970919188,
-  "dif": -57.161978081259804,
-  "dea": -49.64618075195157,
-  "hist": -15.03159465861647,
+  "dif": -57.16197808126526,
+  "dea": -49.6461807519571,
+  "hist": -15.031594658616328,
   "div": {
    "prev_date": "2026-08-03",
    "prev_low": 4019.05,
-   "prev_dif": -29.91357311955926,
+   "prev_dif": -29.913573119874854,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -225,12 +225,18 @@
     "c": 4060.13,
     "chg%": 1.5593615472548672,
     "high%": 1.6959370051953693
+   },
+   {
+    "d": "2026-10-28",
+    "c": 4063.53,
+    "chg%": 1.644408535715991,
+    "high%": 1.6686719412475348
    }
   ],
   "div_area": {
    "prev2_date": "2026-09-28",
-   "area_now": 59.721144583969604,
-   "area_prev": 277.01316368048776,
+   "area_now": 59.72114458393608,
+   "area_prev": 277.01316368042194,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -238,7 +244,7 @@
   "div_swing": {
    "prev_date": "2026-10-07",
    "prev_low": 4066.36,
-   "prev_dif": -61.95812682149335,
+   "prev_dif": -61.95812682150245,
    "lower_low": true,
    "higher_dif": true,
    "is": true

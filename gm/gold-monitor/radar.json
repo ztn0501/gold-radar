@@ -1154,6 +1154,48 @@
      "pct": 1.0744416811676594,
      "ok": false
     }
+   },
+   {
+    "d": "2026-10-28",
+    "c": 4063.53,
+    "score": 2,
+    "space": {
+     "pos60": 12.183550888485115,
+     "ma20": 4120.038,
+     "lower": 4007.6018012737886,
+     "dev20": -1.3715407479251251,
+     "below_lower": false,
+     "ok": true
+    },
+    "momentum": {
+     "prev_low": 3975.7,
+     "prev_date": "2026-10-23",
+     "area_now": 35.74312001581528,
+     "area_prev": 59.721144584044254,
+     "area_div": false,
+     "dif_higher": false,
+     "shrink": 2,
+     "ok": true
+    },
+    "pattern": {
+     "small": false,
+     "streak": 0,
+     "no_new_low": true,
+     "body_pct": 47.676767676772,
+     "engulf": false,
+     "big_yang": false,
+     "ok": false
+    },
+    "volume": {
+     "vol": null,
+     "vol_ma20": 206746.42857142858,
+     "ratio": null,
+     "dry": false,
+     "mild_up": false,
+     "blowoff": false,
+     "pct": 0.08374116099731932,
+     "ok": false
+    }
    }
   ]
  }
