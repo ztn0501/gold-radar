@@ -24,18 +24,26 @@ jobs:
       - name: 抓数并生成页面
         env:
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MANUAL: ${{ github.event_name }}
         run: |
           rm -rf gm && mkdir gm
-          Z=$(ls *-lite*.zip 2>/dev/null | head -1)
+          Z=$(ls gold-monitor.zip 2>/dev/null | head -1)
+          if [ -z "$Z" ]; then Z=$(ls *-lite*.zip 2>/dev/null | head -1); fi
           if [ -z "$Z" ]; then Z=$(ls *.zip | head -1); fi
           echo "zip=$Z"
           unzip -o "$Z" -d gm
           D=$(dirname "$(find gm -name update.py -print -quit)")
           echo "workdir=$D"
           cd "$D"
+          cp "$GITHUB_WORKSPACE/alert_state.json" alert_state.json 2>/dev/null || true
           python3 update.py
+          if [ -f gha/notify.py ]; then python3 gha/notify.py || true; fi
+          cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
           cp index.html "$GITHUB_WORKSPACE/index.html"
-          cp gha/notify.py "$GITHUB_WORKSPACE/notify.py" 2>/dev/null || true
       - name: 提交页面
         run: |
           git config user.name bot
