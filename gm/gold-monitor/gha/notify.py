@@ -164,10 +164,6 @@ def main():
         if st.get(k) == today:
             print("[skip] %s 今天已推送过" % k)
 
-    if not todo:
-        print("[notify] 今日无新信号")
-        return
-
     key = (os.environ.get("SERVERCHAN_KEY") or "").strip()
     mu = (os.environ.get("MAIL_USER") or "").strip()
     mp = (os.environ.get("MAIL_PASS") or "").strip()
@@ -191,6 +187,10 @@ def main():
                 "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
             ])
         ))
+
+    if not todo:
+        print("[notify] 今日无新信号")
+        return
 
     if not key and not (mu and mp):
         for k, title, desp in todo:
