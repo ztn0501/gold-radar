@@ -614,9 +614,9 @@
  },
  "cur": {
   "date": "2026-10-27",
-  "close": 4052.28,
-  "ma60": 4298.07,
-  "gap": -5.72,
+  "close": 4063.49,
+  "ma60": 4298.26,
+  "gap": -5.46,
   "score": 1,
   "space": true,
   "lit": false,
@@ -637,7 +637,7 @@
   "goldGap": null,
   "exempt": false,
   "exemptWait": 20,
-  "ma20": 4124.31,
+  "ma20": 4124.87,
   "ma20Above60": false
  }
 }
