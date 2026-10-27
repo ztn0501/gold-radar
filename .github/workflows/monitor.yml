@@ -26,11 +26,16 @@ jobs:
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
         run: |
           rm -rf gm && mkdir gm
-          unzip -o "$(ls *.zip | head -1)" -d gm
-          cd gm/gold-monitor
+          Z=$(ls *-lite*.zip 2>/dev/null | head -1)
+          if [ -z "$Z" ]; then Z=$(ls *.zip | head -1); fi
+          echo "zip=$Z"
+          unzip -o "$Z" -d gm
+          D=$(dirname "$(find gm -name update.py -print -quit)")
+          echo "workdir=$D"
+          cd "$D"
           python3 update.py
-          cp index.html ../../index.html
-          if [ -f gha/notify.py ]; then cp gha/notify.py ../../notify.py; fi
+          cp index.html "$GITHUB_WORKSPACE/index.html"
+          cp gha/notify.py "$GITHUB_WORKSPACE/notify.py" 2>/dev/null || true
       - name: 提交页面
         run: |
           git config user.name bot
