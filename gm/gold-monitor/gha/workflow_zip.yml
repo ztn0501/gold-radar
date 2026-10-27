@@ -1,8 +1,6 @@
 name: gold
 on:
   schedule:
-    - cron: "15 7 * * *"
-    - cron: "15 21 * * *"
     - cron: "*/30 * * * *"
   workflow_dispatch:
 permissions:
@@ -26,13 +24,25 @@ jobs:
       - name: 抓数并生成页面
         env:
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MANUAL: ${{ github.event_name }}
         run: |
           rm -rf gm && mkdir gm
-          unzip -o "$(ls *.zip | head -1)" -d gm
-          cd gm/gold-monitor
+          Z=$(ls *-lite*.zip 2>/dev/null | head -1)
+          if [ -z "$Z" ]; then Z=$(ls *.zip | head -1); fi
+          echo "zip=$Z"
+          unzip -o "$Z" -d gm
+          D=$(dirname "$(find gm -name update.py -print -quit)")
+          echo "workdir=$D"
+          cd "$D"
+          cp "$GITHUB_WORKSPACE/alert_state.json" alert_state.json 2>/dev/null || true
           python3 update.py
-          cp index.html ../../index.html
-          if [ -f gha/notify.py ]; then cp gha/notify.py ../../notify.py; fi
+          if [ -f gha/notify.py ]; then python3 gha/notify.py || true; fi
+          cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
+          cp index.html "$GITHUB_WORKSPACE/index.html"
       - name: 提交页面
         run: |
           git config user.name bot
