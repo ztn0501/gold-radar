@@ -163,7 +163,7 @@ out = {
         "firstLow": round(lows[first_k], 2) if first_k is not None else None,
         "firstClose": round(closes[first_k], 2) if first_k is not None else None,
         "firstATR": round(atr_at(first_k), 2) if (first_k is not None and atr_at(first_k)) else None,
-        "stopLow": round(lows[first_k] - 0.5*atr_at(first_k), 2) if (first_k is not None and atr_at(first_k)) else None,
+        "stopLow": round(lows[first_k] - 2.0*atr_at(first_k), 2) if (first_k is not None and atr_at(first_k)) else None,
         "daysSinceFirst": days_since_first, "roundEvents": round_ev,
         "goldDate": bars[gold_k]["d"] if gold_k is not None else None,
         "goldGap": round((ma20[gold_k] / ma60[gold_k] - 1) * 100, 2) if gold_k is not None else None,

@@ -674,7 +674,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       <div style="font-size:13px;font-weight:700;color:#e8c35a;letter-spacing:.5px;margin-bottom:9px">实战操作口诀 · 规避人机冲突</div>
       <div style="font-size:12px;color:#b9c2cc;line-height:2">
         <b style="color:#e8c35a">① 左侧试仓，先设止损再谈加仓</b><br>
-        止损位 = <b style="color:#c9d1d9">黄灯日最低价 − 0.5×ATR14</b>（收盘跌破即走）。留 0.5 倍日均波动做缓冲，是为了不被一根插针扫出去：0 缓冲时 17 年 +2.5%、胜率 30%；加 0.5×ATR 后 <b style="color:#26a69a">+11.7%</b>、胜率 37%，回撤不变。别等 MA60 深红 —— 那时平均已亏 <b style="color:#f0524d">5.64%</b>、要等 22 天。<br><br>
+        止损位 = <b style="color:#c9d1d9">黄灯日最低价 − 2.0×ATR14</b>（收盘跌破即走）。宽度用 23 次首灯实测过：<b>0.5×ATR</b> 被扫 <b style="color:#f0524d">52%</b>、期望 +0.59%；<b style="color:#26a69a">2.0×ATR</b> 被扫 <b style="color:#26a69a">17%</b>、期望 <b style="color:#26a69a">+1.44%</b>，最差单次还从 -4.7% 收窄到 -3.7%（<b style="color:#e8c35a">2026-10 修正</b>，原为 0.5 倍）。代价是单笔浮亏变宽到约 3.9%、26 天见分晓 —— 换的是不被日常噪声扫出去。别等 MA60 深红，那时平均已亏 <b style="color:#f0524d">5.64%</b>、要等 22 天。<br><br>
         <b style="color:#e8c35a">② 多重警报同日响，只执行最高顺位那一个</b><br>
         MA20 与 ATR <b>同日触发 → 只按 MA20 减半，不叠加卖出</b>（两次减半会把仓位打到 25%），剩下的底仓死等 MA60 清仓。17 个大顶里两者同日 2 次、相差 ≤1 天 5 次，这条规则用得上。<br><br>
         <b style="color:#e8c35a">③ 止损不是认输，是买保险</b><br>
@@ -1246,12 +1246,12 @@ function renderYseq(){
   if(c.stopLow!=null && c.firstDate){
     const sl = c.stopLow;
     const under = (c.close / sl - 1) * 100;
-    const buf = c.firstATR!=null ? `最低 ${c.firstLow} − 0.5×ATR ${(c.firstATR*0.5).toFixed(1)}` : `最低 ${c.firstLow}`;
+    const buf = c.firstATR!=null ? `最低 ${c.firstLow} − 2.0×ATR ${(c.firstATR*2).toFixed(1)}` : `最低 ${c.firstLow}`;
     stopTxt = under <= 0
       ? `<b style="color:#f0524d">${sl}</b>（${c.firstDate.slice(5)} ${buf}）· 现价已跌破 ${under.toFixed(2)}% <b style="color:#f0524d">→ 按纪律止损，不死扛</b>`
       : `<b style="color:#e8c35a">${sl}</b>（${c.firstDate.slice(5)} ${buf}）· 现价距此 <b>${under.toFixed(2)}%</b> → 收盘跌破即走`;
   } else {
-    stopTxt = `<span style="color:#6e7681">亮灯后自动给出（= 该黄灯日最低价 − 0.5×ATR）</span>`;
+    stopTxt = `<span style="color:#6e7681">亮灯后自动给出（= 该黄灯日最低价 − 2.0×ATR）</span>`;
   }
   let exTxt;
   if(c.exempt){
@@ -1274,7 +1274,7 @@ function renderYseq(){
       <div style="color:#f0524d;font-weight:700;font-size:12px">${c.lit?'⚠ 深水首灯警告':'⚠ 深水区预警 · 下一盏若亮即为深水首灯'} · 偏离 MA60 ${c.gap}%</div>
       <div style="font-size:11px;color:#c9a3a0;margin-top:4px">
         历史 7 次「首次亮灯 + 偏离超 -4%」：+10 日胜率 <b style="color:#e8c35a">71.4%</b>、20 日均值 <b style="color:#f0524d">+2.32%</b>（中位数 +2.28%），短线弹性是全场最好的一档 —— <b>不是</b>半山腰高发区。
-        但 20 日内收盘最大回撤曾达 <b style="color:#e8c35a">-9.16%</b>。所以：<b style="color:#f0524d">仓位封顶 30%，止损设在黄灯日最低价 − 0.5×ATR（收盘跌破即走），浮亏时严禁补仓</b>。
+        但 20 日内收盘最大回撤曾达 <b style="color:#e8c35a">-9.16%</b>。所以：<b style="color:#f0524d">仓位封顶 30%，止损设在黄灯日最低价 − 2.0×ATR（收盘跌破即走），浮亏时严禁补仓</b>。
         深水区只赚反弹，不赌反转。
       </div>
     </div>` : '';
@@ -1308,7 +1308,7 @@ function renderYseq(){
     </div>
     <div style="margin-top:6px;padding-top:7px;border-top:1px dashed #232a34;font-size:11px;line-height:1.75">
       <b style="color:#c9d1d9">试仓止损位</b>：${stopTxt}<br>
-      <span style="color:#5a6371">别等 MA60 深红 —— 那时平均已亏 5.64%、要等 22 天。跌破「最低价 − 0.5×ATR」走，平均只亏 1.45%、6.6 天见分晓。</span>
+      <span style="color:#5a6371">别等 MA60 深红 —— 那时平均已亏 5.64%、要等 22 天。跌破「最低价 − 2.0×ATR」走：23 次首灯里被扫 9 次，平均亏 3.85%、26 天见分晓。</span>
     </div>
     ${deepWarn}${banWarn}
   </div>`;
