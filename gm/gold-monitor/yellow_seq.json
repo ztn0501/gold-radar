@@ -613,10 +613,10 @@
   "hold": 10
  },
  "cur": {
-  "date": "2026-10-28",
-  "close": 4067.16,
-  "ma60": 4295.21,
-  "gap": -5.31,
+  "date": "2026-10-29",
+  "close": 4051.82,
+  "ma60": 4292.06,
+  "gap": -5.6,
   "score": 2,
   "space": true,
   "lit": false,
@@ -624,7 +624,7 @@
   "nextSeq": 1,
   "lastDate": "2026-07-09",
   "lastSeq": 2,
-  "sinceDays": 79,
+  "sinceDays": 80,
   "deep": true,
   "firstDate": null,
   "firstLow": null,
@@ -637,7 +637,7 @@
   "goldGap": null,
   "exempt": false,
   "exemptWait": 20,
-  "ma20": 4120.22,
+  "ma20": 4113.95,
   "ma20Above60": false
  }
 }
