@@ -24,6 +24,7 @@ STEPS = [
     ("黄灯轮次统计", "yellow_seq.py"),
     ("双雷达回测", "backtest.py"),
     ("升级版回测", "upgrade_backtest.py"),
+    ("波浪结构（仅记录）", "wave/run_daily.py"),
     ("生成页面", "build_page.py"),
     ("信号台账", "ledger.py"),
 ]
