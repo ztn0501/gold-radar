@@ -1157,20 +1157,20 @@
    },
    {
     "d": "2026-10-28",
-    "c": 4054.62,
+    "c": 4057.43,
     "score": 2,
     "space": {
-     "pos60": 10.947578687455788,
-     "ma20": 4119.5925,
-     "lower": 4006.197716015021,
-     "dev20": -1.5771584204020146,
+     "pos60": 11.337374634132805,
+     "ma20": 4119.732999999999,
+     "lower": 4006.654053223864,
+     "dev20": -1.5123067441506388,
      "below_lower": false,
      "ok": true
     },
     "momentum": {
      "prev_low": 3975.7,
      "prev_date": "2026-10-23",
-     "area_now": 36.88035078504579,
+     "area_now": 36.521695514391084,
      "area_prev": 59.721144584044254,
      "area_div": false,
      "dif_higher": false,
@@ -1181,7 +1181,7 @@
      "small": true,
      "streak": 1,
      "no_new_low": true,
-     "body_pct": 14.257727470614364,
+     "body_pct": 6.472827968155509,
      "engulf": false,
      "big_yang": false,
      "ok": false
@@ -1193,7 +1193,7 @@
      "dry": false,
      "mild_up": false,
      "blowoff": false,
-     "pct": -0.13570994032211514,
+     "pct": -0.066500333733166,
      "ok": false
     }
    }
