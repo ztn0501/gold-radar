@@ -13,15 +13,49 @@ os.chdir(ROOT)
 sys.path.insert(0, BASE)
 
 LOG = os.path.join(BASE, "wave_log.csv")
+STATE = "alert_state.json"      # 这个文件会被 workflow 拷回仓库，是唯一能持久化的地方
+HIST_KEY = "wave_history"
+HIST_MAX = 500
+
+
+def _load_state():
+    try:
+        return json.load(open(STATE, encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_state(st):
+    json.dump(st, open(STATE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+
+def history():
+    return _load_state().get(HIST_KEY, [])
 
 
 def last_logged_date():
+    h = history()
+    if h:
+        return h[-1].get("d", "")
     try:
         with open(LOG, encoding="utf-8-sig") as f:
             rows = list(csv.reader(f))
         return rows[-1][0] if len(rows) > 1 else ""
     except Exception:
         return ""
+
+
+def push_history(row):
+    """把当天记录写进 alert_state.json（会被 commit 回仓库）"""
+    st = _load_state()
+    h = st.get(HIST_KEY, [])
+    if h and h[-1].get("d") == row["d"]:
+        h[-1] = row
+    else:
+        h.append(row)
+    st[HIST_KEY] = h[-HIST_MAX:]
+    _save_state(st)
+    print("[wave] 历史记录 %d 条" % len(st[HIST_KEY]))
 
 
 def add_zhongshu():
@@ -63,6 +97,21 @@ def main():
         return
     wave_model.main()
     add_zhongshu()
+    # 从 csv 读回当天那行，同步进 alert_state.json
+    try:
+        with open(LOG, encoding="utf-8-sig") as f:
+            row = list(csv.DictReader(f))[-1]
+        if float(row["wA"] or 0) + float(row["wB"] or 0) <= 0:
+            print("[wave] 无合法标注（数据太短？），本次不记录")
+            return
+        push_history({
+            "d": row["date"], "c": float(row["close"]),
+            "wA": float(row["wA"]), "wB": float(row["wB"]),
+            "A_dead": float(row["A_dead"] or 0), "B_dead": float(row["B_dead"] or 0),
+            "c100": float(row["C_tgt_100"] or 0), "w5": float(row["w5_target"] or 0),
+        })
+    except Exception as e:
+        print("[wave] 历史记录写入失败：%s" % e)
 
 
 if __name__ == "__main__":

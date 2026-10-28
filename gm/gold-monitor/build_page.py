@@ -750,7 +750,7 @@ const LEVELS = [];   // 不画任何预设价位线，关键位全部交给雷�
   const el = document.getElementById('wnote');
   if(!el) return;
   const a=W.weight_A, b=W.weight_B;
-  if(a==null){ el.style.display='none'; return; }
+  if(a==null || (a+b)===0){ el.style.display='none'; return; }
   let s='宏观结构：';
   if(a>=0.60) s += `偏 A（顶已成立）· A ${(a*100).toFixed(0)}%`;
   else if(b>=0.60) s += `偏 B（还有一浪）· B ${(b*100).toFixed(0)}%`;
