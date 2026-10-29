@@ -1,6 +1,10 @@
 name: gold
 on:
   schedule:
+    # 北京 06:30 = UTC 22:30。伦敦金日线在纽约 17:00 收盘（夏令时 UTC 21:00 / 冬令时 UTC 22:00），
+    # 取 22:30 一年四季都在收盘之后，不用随夏令时调整。
+    - cron: "30 22 * * *"
+    # 只刷新页面价格，不判定、不推送
     - cron: "*/30 * * * *"
   workflow_dispatch:
 permissions:
@@ -8,7 +12,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  # 按 schedule 分组，避免 22:30 两条 cron 互相取消
+  group: pages-${{ github.event.schedule }}
   cancel-in-progress: true
 jobs:
   run:
@@ -16,34 +21,35 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+      MAIL_USER: ${{ secrets.MAIL_USER }}
+      MAIL_PASS: ${{ secrets.MAIL_PASS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: 抓数并生成页面
-        env:
-          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
-          MAIL_USER: ${{ secrets.MAIL_USER }}
-          MAIL_PASS: ${{ secrets.MAIL_PASS }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
-          MAIL_HOST: ${{ secrets.MAIL_HOST }}
-          MANUAL: ${{ github.event_name }}
         run: |
           rm -rf gm && mkdir gm
           Z=$(ls gold-monitor.zip 2>/dev/null | head -1)
           if [ -z "$Z" ]; then Z=$(ls *-lite*.zip 2>/dev/null | head -1); fi
           if [ -z "$Z" ]; then Z=$(ls *.zip | head -1); fi
-          echo "zip=$Z"
           unzip -o "$Z" -d gm
           D=$(dirname "$(find gm -name update.py -print -quit)")
-          echo "workdir=$D"
           cd "$D"
           cp "$GITHUB_WORKSPACE/alert_state.json" alert_state.json 2>/dev/null || true
           python3 update.py
-          if [ -f gha/notify.py ]; then python3 gha/notify.py || true; fi
           cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
           cp index.html "$GITHUB_WORKSPACE/index.html"
+      - name: 推送（只在结算那一次）
+        if: github.event.schedule == '30 22 * * *'
+        run: |
+          D=$(dirname "$(find gm -name update.py -print -quit)")
+          cd "$D"
+          python3 gha/notify.py || true
+          cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
       - name: 提交页面
         run: |
           git config user.name bot
