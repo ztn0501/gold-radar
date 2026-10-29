@@ -10,13 +10,13 @@
   "lower_shadow": 254.8800000000001,
   "lower_shadow_pct": 5.473686018992971,
   "lower_share": 52.785486476411435,
-  "dif": 169.32129100518796,
-  "dea": 175.28882499956882,
-  "hist": -11.935067988761716,
+  "dif": 169.32128872859812,
+  "dea": 175.288821651643,
+  "hist": -11.935065846089742,
   "div": {
    "prev_date": "2025-11-06",
    "prev_low": 3964.55,
-   "prev_dif": 20.688678448003884,
+   "prev_dif": 20.688447927711422,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -46,8 +46,8 @@
   ],
   "div_area": {
    "prev2_date": "2025-11-18",
-   "area_now": 57.964411078714534,
-   "area_prev": 72.38907875069263,
+   "area_now": 57.96437035400743,
+   "area_prev": 72.38858650927052,
    "lower_low": false,
    "smaller_area": true,
    "is": false
@@ -55,7 +55,7 @@
   "div_swing": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51976089836535,
+   "prev_dif": 65.51974852159765,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -73,13 +73,13 @@
   "lower_shadow": 307.6199999999999,
   "lower_shadow_pct": 6.980828930886114,
   "lower_share": 70.40164778578784,
-  "dif": -101.64563730625014,
-  "dea": -10.451963049173996,
-  "hist": -182.38734851415228,
+  "dif": -101.64563746022395,
+  "dea": -10.451963275607916,
+  "hist": -182.3873483692321,
   "div": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51976089836535,
+   "prev_dif": 65.51974852159765,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -109,8 +109,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-02-17",
-   "area_now": 921.3068258425637,
-   "area_prev": 141.4241578484796,
+   "area_now": 921.3068223333603,
+   "area_prev": 141.4241541793496,
    "lower_low": true,
    "smaller_area": false,
    "is": false
@@ -118,7 +118,7 @@
   "div_swing": {
    "prev_date": "2026-03-03",
    "prev_low": 4996.33,
-   "prev_dif": 105.5786003866233,
+   "prev_dif": 105.57859993436614,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -136,13 +136,13 @@
   "lower_shadow": 39.909999999999854,
   "lower_shadow_pct": 0.9980119781442592,
   "lower_share": 25.611243021241016,
-  "dif": -115.85303668314737,
-  "dea": -100.55098419210212,
-  "hist": -30.60410498209049,
+  "dif": -115.85303668410415,
+  "dea": -100.55098419351091,
+  "hist": -30.60410498118648,
   "div": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694828634521,
+   "prev_dif": -109.07694828826152,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -172,8 +172,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-05-28",
-   "area_now": 179.6789853412601,
-   "area_prev": 255.52699480787615,
+   "area_now": 179.67898532998842,
+   "area_prev": 255.52699478176396,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -181,7 +181,7 @@
   "div_swing": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694828634521,
+   "prev_dif": -109.07694828826152,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -200,12 +200,12 @@
   "lower_shadow_pct": 0.5525552867959584,
   "lower_share": 38.23783970919188,
   "dif": -57.16197808126344,
-  "dea": -49.646180751955605,
-  "hist": -15.031594658615674,
+  "dea": -49.64618075195583,
+  "hist": -15.03159465861522,
   "div": {
    "prev_date": "2026-08-03",
    "prev_low": 4019.05,
-   "prev_dif": -29.913573119726607,
+   "prev_dif": -29.913573119835746,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -235,8 +235,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-09-28",
-   "area_now": 59.721144583955805,
-   "area_prev": 277.0131636804625,
+   "area_now": 59.72114458393928,
+   "area_prev": 277.013163680434,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -244,11 +244,11 @@
   "div_swing": {
    "prev_date": "2026-10-07",
    "prev_low": 4066.36,
-   "prev_dif": -61.95812682149972,
+   "prev_dif": -61.95812682150063,
    "lower_low": true,
    "higher_dif": true,
    "is": true
   },
-  "confirmed": false
+  "confirmed": true
  }
 ]
