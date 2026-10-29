@@ -38,11 +38,24 @@ HOLD = 10         # 连续多少日站上 MA60 视为趋势修复
 
 i0 = next(k for k in range(N) if bars[k]["d"] >= "2011-01-01")
 
+
+def lit(r):
+    """黄灯成立判定。
+    量能项未测得（沪金休市 / 当日量能还没出）时，不允许用"缺一项"凑够 3 分，
+    必须动能与形态同时成立 —— 否则盘中半根 K 线就能触发假信号。
+    """
+    if not r["space"]["ok"]:
+        return False
+    if r["volume"].get("measured", True):
+        return r["score"] >= 3
+    return bool(r["momentum"]["ok"] and r["pattern"]["ok"])
+
+
 # ---------- 1) 全量扫描（含最近三周）----------
 hits_all, last = [], -999
 for k in range(max(i0, 60), N):
     r = rr.radar(k)
-    if r["score"] >= 3 and r["space"]["ok"]:
+    if lit(r):
         if k - last >= GAP:
             hits_all.append(k)
             last = k
@@ -97,7 +110,7 @@ deep_first = stat([x for x in rows if x["seq"] == 1 and x["deep"]])
 # ---------- 5) 当前状态 ----------
 cur_r = rr.radar(N - 1)
 cur_gap = (closes[-1] / ma60[-1] - 1) * 100
-lit_now = bool(cur_r["score"] >= 3 and cur_r["space"]["ok"])
+lit_now = bool(lit(cur_r))
 last_k = hits_all[-1]
 last_seq = seqs[last_k]
 since = N - 1 - last_k
@@ -155,7 +168,10 @@ out = {
     "cur": {
         "date": bars[-1]["d"], "close": round(closes[-1], 2),
         "ma60": round(ma60[-1], 2), "gap": round(cur_gap, 2),
-        "score": cur_r["score"], "space": bool(cur_r["space"]["ok"]),
+        "score": cur_r["score"], "denom": cur_r.get("denom", 4), "space": bool(cur_r["space"]["ok"]),
+        "volMeasured": bool(cur_r["volume"].get("measured", True)),
+        "momentum": bool(cur_r["momentum"]["ok"]), "pattern": bool(cur_r["pattern"]["ok"]),
+        "volume": bool(cur_r["volume"]["ok"]),
         "lit": bool(lit_now), "curSeq": cur_seq, "nextSeq": next_seq,
         "lastDate": bars[last_k]["d"], "lastSeq": last_seq,
         "sinceDays": since, "deep": cur_gap <= -4.0,

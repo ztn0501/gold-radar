@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """五高点 · 三模块联合复盘
-模块：逃顶雷达(≥3紫灯) / 动态止盈线(ATR+MA10) / MA60防守
+模块：超买雷达(≥3紫灯) / 动态止盈线(ATR+MA10) / MA60防守
 判定首个报警模块，并统计后续跌幅与"避开幅度"
 """
 import json, os, bisect
@@ -160,7 +160,7 @@ for dt, ph, tag in peaks:
     # 首个报警模块
     cands = []
     if top_hit:
-        cands.append((top_hit["date"], "逃顶紫灯", top_hit["close"]))
+        cands.append((top_hit["date"], "超买紫灯", top_hit["close"]))
     if trail_hit:
         cands.append((trail_hit["date"], "止盈线+MA10", trail_hit["close"]))
     if ma60_hit and not ma60_hit.get("before"):

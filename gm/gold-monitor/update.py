@@ -7,6 +7,7 @@ os.chdir(BASE)
 
 STEPS = [
     ("抓取行情", "fetch_full.py"),
+    ("裁掉未收盘K线", "trim.py"),
     ("抓取小时线", "fetch_intraday.py"),
     ("GLD 持仓", "fetch_gld.py"),
     ("COMEX 基差", "fetch_comex.py"),

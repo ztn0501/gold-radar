@@ -120,17 +120,20 @@ def state_volume(i):
     blowoff = ratio is not None and ratio>=2.0 and b["c"]<b["o"] and pct<=-1.5
     ok = (dry or mild_up) and not blowoff
     return {"vol":v,"vol_ma20":vm,"ratio":ratio,"dry":dry,"mild_up":mild_up,
-            "blowoff":blowoff,"pct":pct,"ok":bool(ok)}
+            "blowoff":blowoff,"pct":pct,"measured": ratio is not None,"ok":bool(ok)}
 
 def radar(i):
     s1=state_space(i); s2=state_momentum(i); s3=state_pattern(i); s4=state_volume(i)
     score=sum([s1["ok"],s2["ok"],s3["ok"],s4["ok"]])
-    return {"d":bars[i]["d"],"c":bars[i]["c"],"score":score,
+    # 量能未测得时不计分母（3 分制），避免"2/4 还以为差一项"
+    denom=4 if s4.get("measured",True) else 3
+    return {"d":bars[i]["d"],"c":bars[i]["c"],"score":score,"denom":denom,
             "space":s1,"momentum":s2,"pattern":s3,"volume":s4}
 
 idx={b["d"]:k for k,b in enumerate(bars)}
 nodes=[("① 第一波急跌底","2026-02-02"),("② 第二波急跌底","2026-03-23"),
-       ("③ 宏观大底","2026-06-24"),("④ 当前","2026-10-23")]
+       ("③ 宏观大底","2026-06-24"),("④ 当前",bars[-1]["d"])]
+nodes=[(n,d) for n,d in nodes if d in idx]
 
 out=[]
 for name,dt in nodes:

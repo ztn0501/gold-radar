@@ -26,7 +26,11 @@ def state(i):
     dev20=(c[i]/ma20-1)*100
     lo=max(0,i-119); lows=[x["l"] for x in bars[lo:i+1]]; highs=[x["h"] for x in bars[lo:i+1]]
     mn,mx=min(lows),max(highs); pos120=(c[i]-mn)/(mx-mn)*100 if mx>mn else 0
-    space=bool(pos120>=80 or dev20>=15 or c[i]>=upper*0.995)
+    # 2026-10 修正：去掉「收盘贴近布林上轨」单独计空间分的分支。
+    # 该分支在半山腰反弹里也会成立（8/06 位置仅 20% 却拿到空间分 → 假顶），
+    # 全样本实测只贡献 2 次信号、0 次真跌，删掉不影响 1/29 那种真顶（位置 90%）。
+    touch_upper = bool(c[i]>=upper*0.995)
+    space=bool(pos120>=80 or dev20>=15)
     k=bisect.bisect_left(piv,i)-1
     j=piv[k] if k>=0 else None; j2=piv[k-1] if k>=1 else None
     top_div=False
@@ -49,6 +53,7 @@ def state(i):
             "space":space,"momentum":momentum,"pattern":pattern,"volume":vol,
             "detail":{"pos120":round(pos120,1),"dev20":round(dev20,2),"upper":round(upper,2),
                       "close":b["c"],"ma20":round(ma20,2),"below_ma20":b["c"]<ma20,
+                      "touch_upper":touch_upper,
                       "top_div":top_div,"red_shrink":red_shrink,"death":death,
                       "upper_shadow":round(us*100,1),"bear_engulf":bear,
                       "ret3":round(ret3,2),"vr":round(vr,2) if vr else None}}

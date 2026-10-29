@@ -330,6 +330,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 .dot{width:7px;height:7px;border-radius:50%;flex:none}
 .ok{background:#f0524d;box-shadow:0 0 6px rgba(240,82,77,.5)}
 .no{background:#3a434f}
+.na{background:#e8c35a;box-shadow:0 0 6px rgba(232,195,90,.5)}
 .mrow .v{margin-left:auto;color:#6e7681;font-size:10.5px}
 .distwrap{border-top:1px dashed #232a34;padding-top:11px}
 .distline{display:flex;justify-content:space-between;font-size:12px;color:#9aa4b2;margin-bottom:7px}
@@ -362,7 +363,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       <button id="ph-bull">牛市主升浪</button>
       <button id="btncheat" style="border-style:dashed;color:#9aa4b2;margin-left:6px" title="灯亮了我该做什么">速查 ?</button>
     </div>
-    <div class="ph-hint" id="ph-hint">卖出类报警已静音，只保留买入提醒；防守线数值照常显示</div>
+    <div class="ph-hint" id="ph-hint">MA20 / ATR / 超买已静音；MA60 趋势线照常报警</div>
   </div>
 
   <div class="trendbar" id="trendbar">
@@ -485,7 +486,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     <div style="margin-top:10px;border-left:2px solid #4a3d1c;background:#12171e;border-radius:0 8px 8px 0;padding:9px 12px;font-size:11.5px;color:#9aa4b2;line-height:1.9">
       <b style="color:#e8c35a">模块边界 · 只抓「插针收回」型恐慌底</b><br>
       <b style="color:#f0524d">跳空崩盘型（单日跌幅 8% 以上）当天必然失明</b>：这类 K 线的下影 ÷ 振幅天生不足 25%（收盘必落在当日下半区），若再遇跌停则沪金缩量，天量项同时失效 —— 两个条件在数学上互斥，不是参数调得不对。实测 2011–2026 单日跌幅 8% 以上的两次（<b style="color:#c9d1d9">2013-04-15 / 2026-01-30</b>）当天触发 <b style="color:#f0524d">0 次</b>。<br>
-      这类行情由<b style="color:#a855f7">逃顶雷达</b>在顶部预警、<b style="color:#f0524d">MA60 清仓线</b>兜底；若 <b style="color:#e8c35a">T+1</b> 出现「长下影 + 天量」，本模块补发信号（如 2013-04-16，触发后 +20 日 <b style="color:#f0524d">+4.33%</b>、20 日内最大浮亏 0%）。
+      这类行情由<b style="color:#a855f7">超买雷达</b>提示「别追高」、<b style="color:#f0524d">MA60 清仓线</b>兜底；若 <b style="color:#e8c35a">T+1</b> 出现「长下影 + 天量」，本模块补发信号（如 2013-04-16，触发后 +20 日 <b style="color:#f0524d">+4.33%</b>、20 日内最大浮亏 0%）。
     </div>
   </div>
 
@@ -552,7 +553,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 
   <div class="chartbox" style="padding:14px 14px 12px">
     <div class="bar">
-      <div style="font-size:13px;color:#c9d1d9">逃顶雷达 · 2026 四高点复盘</div>
+      <div style="font-size:13px;color:#c9d1d9">超买雷达 · 2026 四高点复盘</div>
       <div style="font-size:11px;color:#6e7681">同一天口径 · 满分 4 分 · ≥3 分紫色预警；≥3 分且跌破 MA20 深红清仓 ｜ <span style="color:#a855f7">牛市主升浪模式下紫灯静音</span>（2016–2026 共 44 次，60 日内 77% 继续涨）</div>
     </div>
     <div class="tblwrap">
@@ -585,11 +586,11 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
   <div class="chartbox" style="padding:14px 14px 12px">
     <div class="bar">
       <div style="font-size:13px;color:#c9d1d9">三模块联合复盘 · 2026 五高点</div>
-      <div style="font-size:11px;color:#6e7681">逃顶紫灯 / 动态止盈线(ATR+MA10) / MA60 防守，谁先响</div>
+      <div style="font-size:11px;color:#6e7681">超买紫灯 / 动态止盈线(ATR+MA10) / MA60 防守，谁先响</div>
     </div>
     <div class="tblwrap">
       <table class="sig btt trp">
-        <thead><tr><th style="text-align:left">高点</th><th>类型</th><th>逃顶紫灯</th>
+        <thead><tr><th style="text-align:left">高点</th><th>类型</th><th>超买紫灯</th>
           <th>动态止盈线</th><th>MA60 破位</th><th>首个报警</th>
           <th>60日最低</th><th>跌幅</th><th>信号价高出最低</th></tr></thead>
         <tbody id="trptb"></tbody>
@@ -657,7 +658,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     数据源：新浪财经外盘（历史日线 / 实时快照）、gold-api.com（盘中刷新）。<br>
     <b style="color:#9aa4b2">关于量能</b>：伦敦金为 OTC 场外市场，无统一成交量；COMEX 黄金期货（GC）的成交量在免费公开源（新浪/腾讯/东财/雅虎/CME）均取不到（返回 0 或被 403/429 拦截）。此处改用 <b>上期所沪金主力（AU0）真实成交量与持仓量</b> 作为跨市场量能参考，并在图中标注，不冒充伦敦金成交量。<br>
     量能倍数 = 当日成交量 ÷ 前 20 日均量；1.5 倍以上视为「显著放量」。量能卡只判「量比 ≥1.5 且收阳/长下影」，不再绑定任何预设价位，非交易建议。<br>
-    <b style="color:#9aa4b2">磨底雷达阈值</b>：空间 = 60 日区间位置 ≤20%（<b style="color:#e8c35a">2026-10 修正</b>：原为「或收盘跌破布林下轨」，实测该分支 4 次平均 T+40 -3.47%、胜率 25%，已改为只看位置；跌破下轨仍在卡片上显示，仅作超卖提示）；动能 = 绿柱面积小于上一波 或 负柱连续 2 日缩短 或 DIF 高于前摆动低点；形态 = 连续 2 日小实体（实体/振幅 ≤35%）且不创新低 或 阳包阴；量能 = 量比 ≤0.7（地量）或 1.0~1.8 倍且收阳（温和放量），量比 ≥2 且收阴跌超 1.5% 记「放量暴跌」一票否决。<br>
+    <b style="color:#9aa4b2">磨底雷达阈值</b>：空间 = 60 日区间位置 ≤20%（<b style="color:#e8c35a">2026-10 修正</b>：原为「或收盘跌破布林下轨」，实测该分支 4 次平均 T+40 -3.47%、胜率 25%，已改为只看位置；跌破下轨仍在卡片上显示，仅作超卖提示）；动能 = 绿柱面积小于上一波 或 负柱连续 2 日缩短 或 DIF 高于前摆动低点；形态 = 连续 2 日小实体（实体/振幅 ≤35%）且不创新低 或 阳包阴；量能 = 量比 ≤0.7（地量）或 1.0~1.8 倍且收阳（温和放量），量比 ≥2 且收阴跌超 1.5% 记「放量暴跌」一票否决。<b style="color:#e8c35a">2026-10 起降级为展示项</b>：2006–2026 控制「空间」之后，量能达标 63%/+1.37% 与未达标 62%/+1.38% 完全一致（p=1.000），量能→真底 AUC 0.538，不再提供增量信息；现在只在页面显示，且「量能未测得」不再算作不达标 —— 此时必须动能与形态同时成立才亮灯。<br>
     MACD 参数 12/26/9，EMA 计算，柱状为 2×(DIF−DEA)。本页仅做数据展示，不含交易建议。<br>
     <b style="color:#ff6b66">卖出信号同样基于日线收盘价确认，严禁盘中假突破/假跌破触发操作！</b><br>
     <div style="margin:2px 0 14px;border:1px solid #33404f;background:linear-gradient(180deg,#0e141c,#0d1117);border-radius:11px;padding:13px 15px">
@@ -684,10 +685,10 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     <b style="color:#9aa4b2">熊市判定四标志 &amp; 2011–2015 镜像</b>：四条<b>同时成立</b>才算熊市 —— ① 收盘 &lt; MA200；② MA200 拐头向下；③ 反弹高点连续低于前高、低点连破；④ 反弹只收复跌幅的 &lt;50%（牛市回调通常能收复 70% 以上）。<br>
     镜像：1920（2011-09）→ 1046（2015-12），<b>-45.5%</b>，用时 4 年零 3 个月；中途 <b>6 次 &gt;10% 反弹、平均 +15.2%、最大 +21.5%</b>；从首次跌破 -25% 到终底还要走 <b>32.8 个月、再跌 22.4%</b>；重回 1920 是 2019-08，<b>前后共 8 年</b>。<b style="color:#e8c35a">熊市不是瀑布是楼梯：每一根 +15% 的反弹都会让人以为底来了。</b><br>
     <b style="color:#9aa4b2">位置的「保质期」是衰减的（2011–2026 全样本，59 个摆动低点）</b>：一个低点形成后，被收盘跌破的概率 —— <b>20 日 3% · 40 日 14% · 60 日 26% · 120 日 35%</b>（存活率 97% / 86% / 74% / 65%）。<b style="color:#f0524d">低点不是越老越结实，是越老越脆</b>：撑住它的是当时的抄底盘，会随成交消耗；同时 MA60 持续下移，把原支撑区甩到价格上方。<b>一个位置守过 60 个交易日，就该改用均线、而不是前低来做判断。</b><br>
-    <b style="color:#9aa4b2">磨底黄灯口径</b>：磨底雷达 ≥3/4 且价格处于近 60 日低位区（<b>区间位置 ≤20%</b>），系统内<b>不含任何预设价位</b>。<br>
+    <b style="color:#9aa4b2">磨底黄灯口径</b>：磨底雷达 ≥3/4 且价格处于近 60 日低位区（<b>区间位置 ≤20%</b>），系统内<b>不含任何预设价位</b>。<b style="color:#e8c35a">2026-10 起只用已收盘的日线判定</b>：伦敦金日线在纽约 17:00 收盘（夏令时 UTC 21:00 / 冬令时 UTC 22:00），此前盘中就用半根 K 线判定 —— 2026-10-29 09:36 那条黄灯 3/4、两小时后跌回 2/4 就是实例。现在脚本先按 UTC 22:30 裁掉未收盘的那根，再跑全部判定，信号固定在每天北京 06:30 之后。<br>
     <b style="color:#9aa4b2">黄灯轮次口径</b>：两个黄灯日之间相隔 <b>≥10 个交易日</b> 才算新的一次（连续亮、隔天闪烁都只算一次）；若中途出现<b>连续 10 个交易日收盘站上 MA60</b>，视为趋势已修复，轮次计数清零、下一盏灯重新算第 1 次。仓位比例为风险预算分配，非胜率加权；第 2 档（二次探底）虽 20 日均值 -0.73%，仍<b>保持 30% 不降</b> —— 这是资金管理而非胜率加权：30+30 的平滑渐进，比为了抠单次胜率把仓位切碎更重要，也能防止二次探底后直接起飞导致踏空。「第 4 次及以上禁止加仓」是唯一由统计直接推出的禁令 —— 2011–2026 年共 8 次第 4 次及以后亮灯，+20 日胜率仅 37.5%、均值 -1.07%，+5 日胜率 12.5%。<br>
     <b style="color:#9aa4b2">动态回撤追踪（锁利润辅助线）</b>：止盈线 = 本轮（最近一次创 60 日新高起）内「近 20 日最高 − 3×ATR14」的最高值，<b>只上移不下移</b>；仅日线收盘跌破才算；<b>跌破止盈线且收盘失守 MA10 → 触发</b>，仍在 MA10 上方 → 震荡暂停；触发只提示减仓一半，<b>MA60 一破则本模块失效</b>，清仓交给 MA60。它的作用是防慢刀子阴跌时把利润全吐回去，<b>不用来抓顶</b>。<br>
-    <b style="color:#9aa4b2">逃顶优先级（2026-10 重新校准）</b>：<b style="color:#c9d1d9">MA20 &gt; ATR棘轮 &gt; MA60</b>。<br>① <b style="color:#f59e0b">高位破 MA20</b>（120 日位置 ≥70%）→ 橙色【高位破 MA20，建议减仓一半】。2011–2026 的 17 个阶段性大顶全部触发，平均延迟 4.0 天、卖在顶下 4.82%、假摔率 12%。<b>低位破 MA20（&lt;70%）只记录、不报警</b> —— 下跌途中的正常回踩，无条件报警的历史假信号率 44%。<br>② <b style="color:#f59e0b">ATR 棘轮</b>（收盘跌破追踪线且失守 MA10）→ 只减一半，定位为<b>锁利润辅助线</b>。17 个大顶仅触发 9 次（53%）、平均延迟 8.7 天、卖在顶下 6.51%，另有 47% 因先跌破 MA60 而失效；非顶时期假信号率 59%。<br>③ <b style="color:#ff4d4d">MA60</b> → 不分位置，收盘跌破即深红【跌破 MA60 趋势破位，建议清仓离场】。17 个大顶全部触发，假摔率 0%，代价是平均要等 12.3 天。若近 10 日内逃顶雷达曾 ≥3 分且当前 &lt; MA20，追加【终极警告】。<br>
+    <b style="color:#9aa4b2">逃顶优先级（2026-10 重新校准）</b>：<b style="color:#c9d1d9">MA20 &gt; ATR棘轮 &gt; MA60</b>。<br>① <b style="color:#f59e0b">高位破 MA20</b>（120 日位置 ≥70%）→ 橙色【高位破 MA20，建议减仓一半】。2011–2026 的 17 个阶段性大顶全部触发，平均延迟 4.0 天、卖在顶下 4.82%、假摔率 12%。<b>低位破 MA20（&lt;70%）只记录、不报警</b> —— 下跌途中的正常回踩，无条件报警的历史假信号率 44%。<br>② <b style="color:#f59e0b">ATR 棘轮</b>（收盘跌破追踪线且失守 MA10）→ 只减一半，定位为<b>锁利润辅助线</b>。17 个大顶仅触发 9 次（53%）、平均延迟 8.7 天、卖在顶下 6.51%，另有 47% 因先跌破 MA60 而失效；非顶时期假信号率 59%。<br>③ <b style="color:#ff4d4d">MA60</b> → 不分位置，收盘跌破即深红【跌破 MA60 趋势破位，建议清仓离场】。17 个大顶全部触发，假摔率 0%，代价是平均要等 12.3 天。若近 10 日内超买雷达曾 ≥3 分且当前 &lt; MA20，追加【终极警告】。<br>
     <div style="margin:10px 0 14px;padding:11px 14px;border-left:3px solid #33404f;background:#0d1319;border-radius:6px">
       <div style="font-size:12px;font-weight:700;color:#9db4cc;margin-bottom:7px">什么时候该盯哪盏灯 · 按「位置 × 跌速」查表</div>
       <div style="font-size:11.5px;color:#b9c2cc;line-height:1.95">
@@ -699,8 +700,8 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       </div>
     </div>
 
-    <b style="color:#9aa4b2">逃顶雷达阈值</b>：空间 = 近 120 日区间位置 ≥80% 或偏离 MA20 ≥15% 或收盘触及布林上轨；动能 = 顶背离 / 红柱连续 2 日缩短 / 3 日内高位死叉；形态 = 上影占振幅 &gt;50% / 阴包阳 / 3 日涨幅 ≥6%；量能 = 量比 ≥2 且收阴或长上影。≥3 分紫色预警，≥3 分且收盘跌破 MA20 触发深红破位。<br>
-    <b style="color:#9aa4b2">紫灯为什么在牛市静音</b>：2011–2015 熊市段 10 次紫灯，20 日收盘均值 +1.36%、成功逃顶 0 次；2016–2026 牛市段 44 次，20 日收盘均值 +2.26%（59% 为正）、60 日 +4.85%（77% 为正），卖飞 13 次（30%），最惨 2025-12-30 之后 20 日涨 +24.81%。因此「牛市主升浪」阶段卡片自动转灰并标注静音 —— 它只提示「别追高」，不作为卖出指令。八个历史大顶里紫灯当天只命中 2 个（2020-08-10 补报、2026-01-29）。<br>
+    <b style="color:#9aa4b2">超买雷达阈值</b>：空间 = 近 120 日区间位置 ≥80% 或偏离 MA20 ≥15%（<b style="color:#e8c35a">2026-10 修正</b>：删去「收盘触及布林上轨」单独计分的分支 —— 半山腰反弹贴上轨也会成立，8/06 位置仅 20% 却拿到空间分，是唯一一次假顶；全样本只贡献 2 次信号、0 次真跌）；动能 = 顶背离 / 红柱连续 2 日缩短 / 3 日内高位死叉；形态 = 上影占振幅 &gt;50% / 阴包阳 / 3 日涨幅 ≥6%；量能 = 量比 ≥2 且收阴或长上影。≥3 分紫色预警，≥3 分且收盘跌破 MA20 触发深红破位。贴上轨仍在卡片上显示，仅作超买提示，不再单独计分。<br>
+    <b style="color:#9aa4b2">为什么它叫「超买」而不叫「逃顶」（2026-10 更名）</b>：它测的是<b style="color:#c9d1d9">超买 + 动量透支</b>，不是见顶。全样本 67 次亮灯，之后 60 个交易日<b>平均仍涨 +4.46%、75% 收涨</b>；60 日内跌 ≥8% 的只有 <b style="color:#ff6b66">9.0%</b>，而随便哪天买入的这个比例是 <b style="color:#58a6ff">21.4%</b>（z=-2.48）—— 亮灯后的下跌概率只有随机的一半，属于<b>负信息量</b>。60 日内最大涨 +9.7% vs 最大跌 -4.0%，64% 的情况下涨得更多。分年代：2011–2015 熊市段 9 次（20 日 +1.59%、60 日 +2.62%）；2016–2026 牛市段 43 次（20 日 +2.25%、60 日 +4.94%、77% 收涨），最惨 2025-12-30 之后 20 日涨 +24.81%。八个历史大顶里，<b>顶当天</b>拿到 3 分的只有 2 个（2016-07-11、2026-01-29），2022-03-08 那轮整段没亮；放宽到前后 10 日才有 7/8。<br>所以：它只提示「别追高、别加仓」，<b style="color:#f0524d">卖出看 MA20 / ATR 棘轮 / MA60，不看它</b>。牛市主升浪阶段卡片自动转灰并标注静音。<br>
     <b style="color:#9aa4b2">1H / 4H 数据口径</b>：使用上期所沪金主力 AU0 60 分钟线（含成交量）作为伦敦金短线的跨市场代理；4H 由 1H 按「日期 + 4 小时时段」合成。内盘休市时段无 K 线，跳空与隔夜缺口会保留，读形态时需注意。<br>
     <b style="color:#9aa4b2">1H/4H 蓝灯的趋势闸门（2026-10 新增）</b>：只有日线 <b>收盘 &gt; MA20 &gt; MA60</b> 时才允许亮灯，卡片标记「牛市回调做T专用」。日线收盘 &lt; MA60 → <b>直接封杀</b>，不弹窗、不闪条、不响铃，卡片转灰显示「做T已关闭 · 趋势向下」；MA60 &lt; 收盘 &lt; MA20 的震荡区同样关闭。<br>依据：2026-05~10 的 1023 根 60 分钟数据里，1H 蓝灯 53 次，4h/8h/24h/48h 扣点差后全部为负（-0.28% ~ -0.48%），跑赢点差的比例只有 38%~45%。按日线趋势分组：上涨趋势 5 次，扣点差净收益 +0.72%、净胜率 100%；下跌趋势 14 次，净收益 -0.52%、净胜率 29%。这波下跌里 9 次 1H+4H 共振全部落在非上涨趋势，24h 均值仅 +0.24%，扣点差后接近零。<br>    <b style="color:#9aa4b2">趋势 / 通道两行（2026-10 新增 · 只展示，不参与任何交易判定）</b>：<br><b style="color:#c9d1d9">趋势行</b>显示 MA20 与 MA60 的距离、是否金叉、MA60 较 40 个交易日前是升是降。这三项构成趋势策略的三个条件：<b>MA20 上穿 MA60 + MA60 向上 → 买入；收盘破 MA60 → 清仓</b>。2011–2026 用 MA20×MA60+斜率过滤回测：+107.5%、最大回撤 -14.0%、17 年 14 笔、胜率 57%、平均持仓 55 天。参数敏感性：换 MA10 为 +163.8%、换 MA25 为 +36.5%，方向稳定但幅度差异大，不要把某个具体数字当预期。<br><b style="color:#c9d1d9">通道行</b>显示前 120 日最高价、当前距前高百分比、当日上影线占振幅。当「距前高 ≤2% 且上影 >40%」时提示 <b style="color:#e8c35a">位置偏高 · 建议暂停加仓</b>。<b>这不是减仓信号</b>：2011–2026 该组合触发 105 次，之后 20 日平均仍涨 <b>+2.15%</b>、胜率 <b>67%</b>（基准 +0.64%）；接近三年新高 1% 内更是 73 次、胜率 70%、均值 +3.45%。若按它减半，资金曲线从 +107.5% 掉到 +58.0%。唯一有效的时段是 2006–2010（-2.17%，连珠炮 -6.19%），靠 2008 年那 4 次暴跌撑起，其余 158 次全是假警报。所以它只用来<b>暂停加仓</b>，不用来卖出。<br><b style="color:#c9d1d9">资金分层建议（2026-10）</b>：<b>趋势策略 70% + 黄灯体系 30%</b>。2011–2026 回测：70/30 组合 <b>+139.8%</b>（含闲置现金 2% 生息）、最大回撤 <b>-11.7%</b>；纯趋势 +176.3% / -14.0%；纯黄灯 +49.3% / -5.4%。黄灯那 30% 的收益贡献只有约 1%，它的价值在于让你有地方折腾，从而不去动主账户的 70%。<br>    <b style="color:#9aa4b2">回放口径</b>：下影线 = min(开,收) − 最低；占振幅 = 下影 ÷ (最高 − 最低)。<b>严格口径</b>：节点最低价低于前 60 个交易日（剔除最近 5 日）内的最低点，且 DIF 高于前低当日 DIF。<b>绿柱面积法</b>：本次下跌（前一摆动低点→当前低点）所有负柱绝对值之和，对比上一波（再前一摆动低点→前一摆动低点），价格新低且面积更小才算背离。<b>摆动低点法</b>：以左右各 5 根 K 线确认的局部低点，价格新低且当前低点 DIF 更高才算背离；最新一根 K 线右侧未确认，标 *。量比 = 当日沪金 AU0 成交量 ÷ 前 20 日均量（含当日）。「信号后 3 日」按伦敦金收盘计算，3 日累计取第 3 个交易日收盘相对信号日收盘的涨跌幅。
     <div id="wnote" style="margin-top:11px;font-size:11px;color:#5a6371;line-height:1.8"></div>
@@ -732,7 +733,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       </tbody>
     </table>
     <div style="margin-top:13px;padding-top:11px;border-top:1px solid #1b2129;font-size:11.5px;color:#6e7681;line-height:1.95">
-      <b style="color:#9aa4b2">三阶段开关</b>　左侧寻底 = 卖出类全静音 ｜ 右侧持仓 = 全部激活 ｜ 牛市主升浪 = MA10 与逃顶紫灯静音<br>
+      <b style="color:#9aa4b2">三阶段开关</b>　左侧寻底 = MA20 / ATR / 超买静音，<b style="color:#f0524d">MA60 照常报警</b> ｜ 右侧持仓 = 全部激活 ｜ 牛市主升浪 = MA10 与超买紫灯静音<br>
       <b style="color:#9aa4b2">三条铁律</b>　① 灯是提醒，不是命令 ② 仓位按纪律 30/30/40，不按感觉 ③ 止损按 ATR，浮亏时严禁补仓
     </div>
   </div>
@@ -1163,13 +1164,22 @@ function renderRadar(){
   const cur = R[R.length-1];
   const d = cur.day;
   const yes = '<span style="color:#f0524d">是</span>', no = '<span style="color:#6e7681">否</span>';
-  const card=(title,ok,main,sub)=>`<div class="rc"><div class="t"><span class="dot ${ok?'ok':'no'}"></span>${title}<span style="margin-left:auto;color:${ok?'#f0524d':'#6e7681'}">${ok?'达标':'未达标'}</span></div><div class="m"><b>${main}</b><br>${sub}</div></div>`;
+  const card=(title,ok,main,sub,na)=>{
+    const st = na?'na':(ok?'ok':'no');
+    const tx = na?'待确认':(ok?'达标':'未达标');
+    const cl = na?'#e8c35a':(ok?'#f0524d':'#6e7681');
+    return `<div class="rc"><div class="t"><span class="dot ${st}"></span>${title}<span style="margin-left:auto;color:${cl}">${tx}</span></div><div class="m"><b>${main}</b><br>${sub}</div></div>`;
+  };
   const s1=d.space, s2=d.momentum, s3=d.pattern, s4=d.volume;
   document.getElementById('radarcards').innerHTML =
     card('空间状态', s1.ok, `60日区间位置 ${s1.pos60.toFixed(0)}%`, `偏离MA20 ${s1.dev20.toFixed(2)}% · 布林下轨 ${s1.below_lower?'已跌破（仅超卖提示）':'未跌破'}`) +
     card('动能状态', s2.ok, `面积背离 ${s2.area_div?'是':'否'} · 绿柱缩短 ${s2.shrink} 天`, `本次面积 ${s2.area_now!=null?s2.area_now.toFixed(1):'--'} / 上波 ${s2.area_prev!=null?s2.area_prev.toFixed(1):'--'}`) +
     card('形态状态', s3.ok, `小实体连续 ${s3.streak} 天`, `阳包阴 ${s3.engulf?'是':'否'} · 不创新低 ${s3.no_new_low?'是':'否'} · 实体占比 ${s3.body_pct.toFixed(0)}%`) +
-    card('量能状态', s4.ok, `量比 ${s4.ratio!=null?s4.ratio.toFixed(2)+'×':'--'}`, `地量 ${s4.dry?'是':'否'} · 温和放量收阳 ${s4.mild_up?'是':'否'} · 放量暴跌 ${s4.blowoff?'是':'否'}`);
+    card('量能状态', s4.ok,
+      (s4.measured===false?'沪金当日数据未出':`量比 ${s4.ratio!=null?s4.ratio.toFixed(2)+'×':'--'}`),
+      (s4.measured===false?'未测得 ≠ 不达标：此项不参与打分，须动能+形态同时成立才亮灯'
+        :`地量 ${s4.dry?'是':'否'} · 温和放量收阳 ${s4.mild_up?'是':'否'} · 放量暴跌 ${s4.blowoff?'是':'否'}`),
+      s4.measured===false);
 
   document.getElementById('wtb').innerHTML = R.map((n,ix)=>{
     const color=['#5b8dee','#26a69a','#e8c35a','#f0524d'][ix];
@@ -1235,7 +1245,7 @@ function renderYseq(){
 
   const litTxt = c.lit
     ? `<span style="color:#f0524d;font-weight:700">已亮灯 · 本轮第 ${c.curSeq} 次</span>`
-    : `<span style="color:#6e7681">未亮灯</span>（${c.score}/4 分，距 3 分还差 ${Math.max(0,3-c.score)} 项）`;
+    : `<span style="color:#6e7681">未亮灯</span>（${c.score}/${c.denom||4} 分，距 3 分还差 ${Math.max(0,3-c.score)} 项）`;
   const tipCol = ys.seq >= 4 ? '#f0524d' : ys.col;
   const nextTxt = c.lit
     ? `按纪律：<b style="color:${tipCol}">${ys.nm} · 建议 ${ys.pos}</b>`
@@ -1512,17 +1522,16 @@ function renderDefense(){
   else if(!M.below20) d1a='→ 持仓条件未破';
   else if(M.high20break) d1a='→ 高位破位，建议减仓一半';
   else d1a=`→ 位置 ${pos!=null?pos+'%':'--'}（&lt;70%），低位破位不报警`;
-  // 第三顺位：MA60 —— 无条件清仓
+  // 第三顺位：MA60 —— 趋势线，左侧阶段也照常报警（静音只针对 MA20 / ATR）
   const act60 = M.ma60_action || (M.below60?'清仓':'守住');
-  const c2 = mute?'muted':(!M.below60?'ok'
+  const c2 = (!M.below60?'ok'
     :((bull&&M.shallow60)?'orange'
       :(act60==='不动'?'muted':(act60==='减半'?'orange':'darkred'))));
-  const d2a = mute?'→ 仅显示数值（已静音）'
-    :(!M.below60?'→ 趋势未破'
+  const d2a = (!M.below60?'→ 趋势未破'
       :((bull&&M.shallow60)?`→ 浅破 ${Math.abs(M.gap60)}%，观察 ${M.below60_days}/10 天`
         :(act60==='不动'?`→ 牛市高位破位，视为洗盘 · 不动`
-          :(act60==='减半'?`→ ${M.env||''}市 · ${M.zone||''}位，减仓一半`
-            :`→ ${M.env||''} · ${M.zone||''}位，清仓离场`))));
+          :(act60==='减半'?`→ ${M.env||''}市 · ${M.zone||''}位，减仓一半 · 已破 ${M.below60_days} 日`
+            :`→ ${M.env||''} · ${M.zone||''}位，清仓离场 · 已破 ${M.below60_days} 日`))));
   // 第二顺位：ATR 锁利润线（辅助，非逃顶主力）
   const hasS = !!S.date;
   const c3 = (mute||S.fail)?'muted':(S.trigger?'orange':'ok');
@@ -1541,7 +1550,7 @@ function renderDefense(){
       <div class="dd">追踪线 ${hasS&&S.trail?fmt(S.trail):'--'}${hasS&&S.gap_trail!=null?` · 距线 ${S.gap_trail}%`:''}<br>${d3a}<br><span style="color:#5a6371">非逃顶主力（看 MA20）</span></div></div></div>
      <div class="dcard ${c2}"><div class="dl">MA60<br><span style="font-size:9.5px;color:#5a6371">分层防守</span></div>
       <div><div class="dv">${M.below60?'已跌破':'守住'}</div>
-      <div class="dd">收盘 ${fmt(M.close)} · MA60 ${fmt(M.ma60)} · ${M.gap60>0?'+':''}${M.gap60}%<br>${d2a}<br><span style="color:#5a6371">环境 ${M.env||'--'} · 距250日高 ${M.pos250!=null?M.pos250+'%':'--'}</span></div></div></div>`;
+      <div class="dd">收盘 ${fmt(M.close)} · MA60 ${fmt(M.ma60)} · ${M.gap60>0?'+':''}${M.gap60}%<br>${d2a}<br><span style="color:#5a6371">环境 ${M.env||'--'} · 距250日高 ${M.pos250!=null?M.pos250+'%':'--'}${M.dd8?' · <span style="color:#f0524d">已破 8% 回撤线第 '+M.dd8_days+' 日</span>':' · 8% 回撤线未破'}</span></div></div></div>`;
 }
 
 function renderPeriods(){
@@ -1568,7 +1577,7 @@ function renderPeriods(){
         const muted = ((PHASE==='bull'||PHASE==='left') && ts>=3 && !st.topBreak);
         const cls = st.topBreak?'red':(ts>=3?(muted?'gray':'purple'):(ts>=1?'yellow':'gray'));
         const desc = muted ? '静音 · 仅作参考' : (ts>=3?(st.topBreak?'跌破MA20 · 破位':'超买衰竭'):'未触发');
-        return `<div class="pcard ${cls}"${muted?' style="opacity:.62"':''}><div class="pc-l">逃顶</div><div class="pc-s">${ts}<span style="font-size:11px;color:#6e7681">/4</span></div>
+        return `<div class="pcard ${cls}"${muted?' style="opacity:.62"':''}><div class="pc-l">超买</div><div class="pc-s">${ts}<span style="font-size:11px;color:#6e7681">/4</span></div>
           <div class="pc-d">${desc}<br>120日位置 ${d.pos120!=null?d.pos120+'%':'--'} · 偏离MA20 ${d.dev20!=null?d.dev20+'%':'--'}${muted?'<br><span style="font-size:9.5px;color:#5a6371">'+(PHASE==='bull'?'牛市 60 日内 77% 会卖飞':'左侧寻底 · 卖出类已静音')+'</span>':''}</div></div>`;
       })();
 }
@@ -1601,20 +1610,20 @@ function paintAlert(){
     meta.textContent=`收盘 ${fmt(st.M.close)} < MA60 ${fmt(st.M.ma60)} · ${st.M.gap60}% · ${st.env||''}·${st.zone||''}位`;
   } else if(PHASE==='right' && st.ultimate){
     bar.classList.add('darkred');
-    t.textContent='【终极警告：逃顶信号后跌破 MA20】';
-    meta.textContent=`逃顶 ${st.T.last_top3?(st.T.last_top3.date+' 触发'):''} · 收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)}`;
+    t.textContent='【终极警告：超买信号后跌破 MA20】';
+    meta.textContent=`超买 ${st.T.last_top3?(st.T.last_top3.date+' 触发'):''} · 收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)}`;
   } else if(PHASE==='right' && st.topBreak){
     bar.classList.add('darkred');
     t.textContent='【趋势破位！清仓离场！】';
-    meta.textContent=`逃顶 ${st.ts}/4 · 收盘跌破 MA20 · ${fmt(st.price)}`;
+    meta.textContent=`超买 ${st.ts}/4 · 收盘跌破 MA20 · ${fmt(st.price)}`;
   } else if(PHASE==='right' && st.top3){
     bar.classList.add('purple');
     t.textContent='【警惕！进入超买衰竭区，建议开始左侧分批止盈】';
-    meta.textContent=`逃顶 ${st.ts}/4 · 120日位置 ${st.T.detail.pos120}% · 偏离MA20 ${st.T.detail.dev20}%`;
+    meta.textContent=`超买 ${st.ts}/4 · 120日位置 ${st.T.detail.pos120}% · 偏离MA20 ${st.T.detail.dev20}%`;
   } else if(PHASE==='right' && st.ma20break){
     bar.classList.add('orange');
     t.textContent='【高位破 MA20，建议减仓一半】';
-    meta.textContent=`收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)} · ${st.M.gap20}% · 120日位置 ${st.pos120}%（≥70%）· 逃顶 ${st.ts}/4 · 同日 ATR 不叠加`;
+    meta.textContent=`收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)} · ${st.M.gap20}% · 120日位置 ${st.pos120}%（≥70%）· 超买 ${st.ts}/4 · 同日 ATR 不叠加`;
   } else if(PHASE==='right' && st.trailHit && !st.ma20break){
     bar.classList.add('orange');
     t.textContent='【ATR 锁利润线触发（辅助）】';
@@ -1634,7 +1643,7 @@ function paintAlert(){
   } else if(st.mo){
     bar.classList.add('yellow');
     t.textContent='【进入震荡底部区，可开启分批网格建仓】';
-    meta.textContent=`磨底 ${st.m.day.score}/4 · 60日位置 ${st.m.day.space.pos60.toFixed(0)}% · ${fmt(st.price)}`;
+    meta.textContent=`磨底 ${st.m.day.score}/${st.m.day.denom||4} · 60日位置 ${st.m.day.space.pos60.toFixed(0)}% · ${fmt(st.price)}`;
   } else if(st.blue1){
     bar.classList.add('blue');
     t.textContent='【短线超跌反弹预警】';
@@ -1646,7 +1655,7 @@ function paintAlert(){
     let _d5 = 0;
     if(bars && bars.length>5){ _d5 = (bars[bars.length-1].c/bars[bars.length-6].c-1)*100; }
     const _why20 = _d5 <= -5 ? '急跌致位置快速下移' : '位置本就不高';
-    meta.innerHTML=`${PHASE==='left'?'左侧寻底 · 卖出静音':'右侧持仓 · 卖出激活'} · 1H ${st.s1}/3 · 4H ${st.s4}/3 · 逃顶 ${st.ts}/4 · ${fmt(st.price)} · 60日位置(收盘) ${sp60!=null?sp60.toFixed(0)+'%':'--'} · 追踪线 ${st.S.trail?fmt(st.S.trail):'--'}${st.S.fail?'（已失效）':''}`
+    meta.innerHTML=`${PHASE==='left'?'左侧寻底 · 卖出静音':'右侧持仓 · 卖出激活'} · 1H ${st.s1}/3 · 4H ${st.s4}/3 · 超买 ${st.ts}/4 · ${fmt(st.price)} · 60日位置(收盘) ${sp60!=null?sp60.toFixed(0)+'%':'--'} · 追踪线 ${st.S.trail?fmt(st.S.trail):'--'}${st.S.fail?'（已失效）':''}`
       + (st.low20break?` · <span style="color:#6e7681">MA20 已破但 120日位置 ${st.pos120}%（&lt;70%），${_why20}，按规则静默</span>`:'');
   }
   renderPeriods(); renderDefense();
@@ -1720,9 +1729,9 @@ function showAlert(type, preview){
     beep(360,.6); setTimeout(()=>beep(280,.7),260); setTimeout(()=>beep(220,.9),560);
   } else if(type==='ultimate'){
     modal.classList.add('darkred');
-    t.style.color='#ff4d4d'; t.textContent='终极警告：逃顶信号后跌破 MA20';
-    sub.innerHTML=`逃顶雷达曾在 <b>${st.T.last_top3?st.T.last_top3.date:'近期'}</b> 给出 ≥3 分，随后收盘跌破 MA20<br>现价 ${fmt(st.price)}`;
-    det.innerHTML=`两项条件叠加：① 逃顶雷达 ≥3 分；② 随后跌破 MA20。说明顶部结构已确认破位。<br>按你的规则：直接清仓，不等反抽。${pv}`;
+    t.style.color='#ff4d4d'; t.textContent='终极警告：超买信号后跌破 MA20';
+    sub.innerHTML=`超买雷达曾在 <b>${st.T.last_top3?st.T.last_top3.date:'近期'}</b> 给出 ≥3 分，随后收盘跌破 MA20<br>现价 ${fmt(st.price)}`;
+    det.innerHTML=`两项条件叠加：① 超买雷达 ≥3 分；② 随后跌破 MA20。说明顶部结构已确认破位。<br>按你的规则：直接清仓，不等反抽。${pv}`;
     beep(420,.55); setTimeout(()=>beep(320,.65),250); setTimeout(()=>beep(240,.85),520);
   } else if(type==='ma20'){
     modal.classList.add('orange');
@@ -1735,13 +1744,13 @@ function showAlert(type, preview){
   } else if(type==='topbreak'){
     modal.classList.add('darkred');
     t.style.color='#ff4d4d'; t.textContent='趋势破位！清仓离场！';
-    sub.innerHTML=`逃顶雷达 <b>${preview?4:st.ts}/4</b> 分，且收盘价已跌破 MA20<br>现价 ${fmt(st.price)} · MA20 ${preview?'4,130':(st.T.detail?st.T.detail.ma20:'--')}`;
+    sub.innerHTML=`超买雷达 <b>${preview?4:st.ts}/4</b> 分，且收盘价已跌破 MA20<br>现价 ${fmt(st.price)} · MA20 ${preview?'4,130':(st.T.detail?st.T.detail.ma20:'--')}`;
     det.innerHTML=`触发条件：超买衰竭 ≥3 分 + 收盘跌破 MA20。这是本系统最高级别的风险提示。<br>按你的规则：清仓离场，不抢反弹、不摊平。${pv}`;
     beep(420,.6); setTimeout(()=>beep(330,.7),260); setTimeout(()=>beep(260,.9),560);
   } else if(type==='top'){
     modal.classList.add('purple');
     t.style.color='#d8b4fe'; t.textContent='警惕！进入超买衰竭区';
-    sub.innerHTML=`逃顶雷达 <b>${preview?3:st.ts}/4</b> 分<br>现价 ${fmt(st.price)} · 120日高位`;
+    sub.innerHTML=`超买雷达 <b>${preview?3:st.ts}/4</b> 分<br>现价 ${fmt(st.price)} · 120日高位`;
     det.innerHTML=`触发条件：空间超买 + 动能衰竭 + 形态滞涨 + 放量滞涨，四项中满足三项以上。<br>按你的规则：开始左侧分批止盈，先减一部分，留仓看 MA20 是否失守。${pv}`;
     beep(560,.45); setTimeout(()=>beep(500,.5),200);
   } else if(type==='resonance3'){
@@ -1826,9 +1835,9 @@ function initAlerts(){
     document.getElementById('ph-right').classList.toggle('on',p==='right');
     document.getElementById('ph-bull').classList.toggle('on',p==='bull');
     document.getElementById('ph-hint').textContent = p==='left'
-      ? '卖出类报警已静音，只保留买入提醒；防守线数值照常显示'
+      ? 'MA20 / ATR / 超买已静音；MA60 趋势线照常报警'
       : (p==='bull'
-         ? '牛市主升浪：MA10 与逃顶紫灯静音、MA60 浅破宽恕 10 天、重回 MA20 提示回补'
+         ? '牛市主升浪：MA10 与超买紫灯静音、MA60 浅破宽恕 10 天、重回 MA20 提示回补'
          : 'MA20 / MA60 清仓报警已激活，破位立刻弹窗');
     if(p==='left') document.getElementById('alertmask').classList.remove('show');
     paintAlert(); renderDefense(); renderPeriods();
@@ -1855,9 +1864,9 @@ function initAlerts(){
   else if(PHASE==='bull' && st.reclaim20) fire('bullre','bullreclaim','假摔收回，建议买回',`重回 MA20 ${fmt(st.M.ma20)}`);
   else if(PHASE==='bull' && st.ma20break) fire('bull20','ma20','高位破 MA20，减仓一半',`收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)}`);
   else if(PHASE==='right' && st.ma60break) fire('ma60','ma60','跌破 MA60 趋势破位，建议清仓离场',`收盘 ${fmt(st.M.close)} < MA60 ${fmt(st.M.ma60)}`);
-  else if(PHASE==='right' && st.ultimate) fire('ult','ultimate','终极警告：逃顶后跌破 MA20',`${st.T.last_top3?st.T.last_top3.date:''} 逃顶信号 + 跌破 MA20`);
-  else if(PHASE==='right' && st.topBreak) fire('tb','topbreak','趋势破位！清仓离场！',`逃顶 ${st.ts}/4 · 跌破 MA20 · ${fmt(st.price)}`);
-  else if(PHASE==='right' && st.top3) fire('top','top','警惕！进入超买衰竭区',`逃顶 ${st.ts}/4 · ${fmt(st.price)}`);
+  else if(PHASE==='right' && st.ultimate) fire('ult','ultimate','终极警告：超买后跌破 MA20',`${st.T.last_top3?st.T.last_top3.date:''} 超买信号 + 跌破 MA20`);
+  else if(PHASE==='right' && st.topBreak) fire('tb','topbreak','趋势破位！清仓离场！',`超买 ${st.ts}/4 · 跌破 MA20 · ${fmt(st.price)}`);
+  else if(PHASE==='right' && st.top3) fire('top','top','警惕！进入超买衰竭区',`超买 ${st.ts}/4 · ${fmt(st.price)}`);
   else if(PHASE==='right' && st.ma20break) fire('ma20','ma20','高位破 MA20，建议减仓一半',`收盘 ${fmt(st.M.close)} < MA20 ${fmt(st.M.ma20)} · 120日位置 ${st.pos120}%`);
   else if(PHASE==='right' && st.trailHit && !st.ma20break) fire('trail','trail','ATR 锁利润线触发（辅助）',`收盘 ${fmt(st.S.close)} < 追踪线 ${fmt(st.S.trail)}（${st.S.gap_trail}%）`);
   else if(st.red3) fire('r3','resonance3','三维共振！重仓出击！',`1H ${st.s1}/3 · 4H ${st.s4}/3 · 日线达标 · ${fmt(st.price)}`);
@@ -1865,14 +1874,14 @@ function initAlerts(){
   else if(st.blue2) fire('r2','resonance2','牛市回调做T · 1H+4H 共振',`1H ${st.s1}/3 · 4H ${st.s4}/3 · ${fmt(st.price)}`);
   else if(st.mo){
     const ys = yseqState();
-    if(ys) fire('mo','mo', `黄灯第 ${ys.seq} 次 · ${ys.nm}`, `建议仓位 ${ys.pos} · 偏离 MA60 ${ys.cur.gap}% · 磨底 ${st.m.day.score}/4 · ${fmt(st.price)}`);
-    else fire('mo','mo','进入震荡底部区',`磨底 ${st.m.day.score}/4 · 60日位置 ${st.m.day.space.pos60.toFixed(0)}% · ${fmt(st.price)}`);
+    if(ys) fire('mo','mo', `黄灯第 ${ys.seq} 次 · ${ys.nm}`, `建议仓位 ${ys.pos} · 偏离 MA60 ${ys.cur.gap}% · 磨底 ${st.m.day.score}/${st.m.day.denom||4} · ${fmt(st.price)}`);
+    else fire('mo','mo','进入震荡底部区',`磨底 ${st.m.day.score}/${st.m.day.denom||4} · 60日位置 ${st.m.day.space.pos60.toFixed(0)}% · ${fmt(st.price)}`);
   }
 }
 
 function renderTripleReview(){
   const R = DATA.tripleReview || []; if(!R.length) return;
-  const modColor = m => (m.indexOf('逃顶')>=0 ? '#a855f7' : (m.indexOf('MA60')>=0 ? '#f0524d' : '#f59e0b'));
+  const modColor = m => (m.indexOf('超买')>=0 ? '#a855f7' : (m.indexOf('MA60')>=0 ? '#f0524d' : '#f59e0b'));
   document.getElementById('trptb').innerHTML = R.map(r=>{
     const t = r.top;
     const topCell = t
@@ -1900,10 +1909,10 @@ function renderTripleReview(){
   }).join('');
 
   document.getElementById('trpsum').innerHTML =
-    `<b>1-29（绝对大顶）：三模块全中，逃顶紫灯当天就响。</b>3/4 分（空间 90%+ / 3日涨 7.37% / 量比 2.18 收阴），收 5,377 报警；次日止盈线再确认 4,860。后续跌到 4,099（<b>-23.77%</b>），信号价比最低点高 <b>31.18%</b>——完整避开。` +
-    `<br><b>3-02（第一波诱多顶）：逃顶雷达没响，止盈线救了。</b>雷达 0/4（120 日位置不足、无天量），但止盈线仍是 1-29 那段锁定的 <b>5,174.02</b>，3-03 收盘 5,088 就跌破 MA10 → <b>T+1 报警</b>。后续跌 4,099（<b>-22.98%</b>），信号价高出最低 <b>24.13%</b>。` +
+    `<b>1-29（绝对大顶）：三模块全中，超买紫灯当天就响。</b>3/4 分（空间 90%+ / 3日涨 7.37% / 量比 2.18 收阴），收 5,377 报警；次日止盈线再确认 4,860。后续跌到 4,099（<b>-23.77%</b>），信号价比最低点高 <b>31.18%</b>——完整避开。` +
+    `<br><b>3-02（第一波诱多顶）：超买雷达没响，止盈线救了。</b>雷达 0/4（120 日位置不足、无天量），但止盈线仍是 1-29 那段锁定的 <b>5,174.02</b>，3-03 收盘 5,088 就跌破 MA10 → <b>T+1 报警</b>。后续跌 4,099（<b>-22.98%</b>），信号价高出最低 <b>24.13%</b>。` +
     `<br><b>5-12（破 MA60 后反弹）：根本不是"新顶"，MA60 早在 3-18 就报警了。</b>依赖 MA60 纪律，这个位置<b>本就不该有仓位</b>；止盈线 5-14 只是二次确认（4,652）。后续跌 3,943（-16.36%）。` +
-    `<br><b>结论：两个诱多陷阱都躲过了，但贡献者不同——3-02 靠止盈线，5-12 靠 MA60。</b>逃顶雷达在这两个位置<b>连续未触发</b>，印证它只认"垂直赶顶 + 天量"，对缩量反弹顶天然失明。三者不是并列关系，而是接力：<b>紫灯管赶顶 → 止盈线管缓跌 → MA60 管趋势</b>。` +
+    `<br><b>结论：两个诱多陷阱都躲过了，但贡献者不同——3-02 靠止盈线，5-12 靠 MA60。</b>超买雷达在这两个位置<b>连续未触发</b>，印证它只认"垂直赶顶 + 天量"，对缩量反弹顶天然失明。三者不是并列关系，而是接力：<b>紫灯提示赶顶（只停加仓、不下卖单）→ 止盈线管缓跌 → MA60 管趋势</b>。` +
     `<br><span style="color:#6e7681">注：3-02 的止盈线之所以有效，正是因为 2-24/3-02 都没创 60 日新高，线没有重置、仍沿用 1-29 的 5,174——"次高不重置"这条规则在这里直接兑现。</span>`;
 }
 
@@ -1976,7 +1985,7 @@ function renderTopReview(){
     `本质是<b>下跌趋势里的反弹次高点</b>，不是“加速赶顶”，这套雷达按定义就不认。` +
     `<br><b>清仓为什么也没给：</b>四次跌破 MA20 分别在 T+2 / T+7 / T+4 / T+5，破位当天得分只有 1 / 2 / 2 / 1，` +
     `达不到 ≥3 的门槛，所以深红弹窗一次都没亮。` +
-    `<br><span style="color:#6e7681">结论：这套逃顶雷达只擅长“垂直赶顶 + 天量长上影”，对“缓涨/反弹次高点的阴跌顶”几乎无感；要用它逃顶，必须再加一条「跌破 MA20 即减仓」的机械规则，而不是等 3 分。</span>`;
+    `<br><span style="color:#6e7681">结论：这套超买雷达只擅长“垂直赶顶 + 天量长上影”，对“缓涨/反弹次高点的阴跌顶”几乎无感；如果想靠它逃顶，必须再加一条「跌破 MA20 即减仓」的机械规则，而不是等 3 分。</span>`;
 }
 
 function calcGrid(){

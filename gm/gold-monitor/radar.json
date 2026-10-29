@@ -6,6 +6,7 @@
    "d": "2026-02-02",
    "c": 4656.46,
    "score": 0,
+   "denom": 4,
    "space": {
     "pos60": 42.05094056933578,
     "ma20": 4782.206,
@@ -41,6 +42,7 @@
     "mild_up": false,
     "blowoff": true,
     "pct": -4.195753838683736,
+    "measured": true,
     "ok": false
    }
   },
@@ -49,6 +51,7 @@
     "d": "2026-01-29",
     "c": 5377.14,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 86.84641650513989,
      "ma20": 4745.446999999999,
@@ -84,6 +87,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -0.6962347917944034,
+     "measured": true,
      "ok": false
     }
    },
@@ -91,6 +95,7 @@
     "d": "2026-01-30",
     "c": 4860.39,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 54.89955753839367,
      "ma20": 4771.824,
@@ -126,6 +131,7 @@
      "mild_up": false,
      "blowoff": true,
      "pct": -9.610127316752026,
+     "measured": true,
      "ok": false
     }
    },
@@ -133,6 +139,7 @@
     "d": "2026-02-02",
     "c": 4656.46,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 42.05094056933578,
      "ma20": 4782.206,
@@ -168,6 +175,7 @@
      "mild_up": false,
      "blowoff": true,
      "pct": -4.195753838683736,
+     "measured": true,
      "ok": false
     }
    },
@@ -175,6 +183,7 @@
     "d": "2026-02-03",
     "c": 4945.23,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 59.2708665653286,
      "ma20": 4804.7384999999995,
@@ -210,6 +219,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": 6.201492120623819,
+     "measured": true,
      "ok": false
     }
    },
@@ -217,6 +227,7 @@
     "d": "2026-02-04",
     "c": 4963.59,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 60.41391650348164,
      "ma20": 4830.101999999999,
@@ -252,6 +263,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": 0.371266857153274,
+     "measured": true,
      "ok": false
     }
    },
@@ -259,6 +271,7 @@
     "d": "2026-02-05",
     "c": 4774.48,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 48.58263627775447,
      "ma20": 4844.9619999999995,
@@ -294,6 +307,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -3.8099440122975614,
+     "measured": true,
      "ok": false
     }
    }
@@ -306,6 +320,7 @@
    "d": "2026-03-23",
    "c": 4406.64,
    "score": 0,
+   "denom": 4,
    "space": {
     "pos60": 20.544843753130614,
     "ma20": 5028.1235,
@@ -341,6 +356,7 @@
     "mild_up": false,
     "blowoff": false,
     "pct": -2.0089037531854537,
+    "measured": true,
     "ok": false
    }
   },
@@ -349,6 +365,7 @@
     "d": "2026-03-19",
     "c": 4650.33,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 28.435800255694517,
      "ma20": 5099.2565,
@@ -384,6 +401,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -3.496699406287418,
+     "measured": true,
      "ok": false
     }
    },
@@ -391,6 +409,7 @@
     "d": "2026-03-20",
     "c": 4496.98,
     "score": 1,
+    "denom": 4,
     "space": {
      "pos60": 16.834986269659343,
      "ma20": 5069.163,
@@ -426,6 +445,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -3.297615438044188,
+     "measured": true,
      "ok": false
     }
    },
@@ -433,6 +453,7 @@
     "d": "2026-03-23",
     "c": 4406.64,
     "score": 0,
+    "denom": 4,
     "space": {
      "pos60": 20.544843753130614,
      "ma20": 5028.1235,
@@ -468,6 +489,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -2.0089037531854537,
+     "measured": true,
      "ok": false
     }
    },
@@ -475,6 +497,7 @@
     "d": "2026-03-24",
     "c": 4474.26,
     "score": 1,
+    "denom": 4,
     "space": {
      "pos60": 25.060942623771957,
      "ma20": 4994.764999999999,
@@ -510,6 +533,7 @@
      "mild_up": true,
      "blowoff": false,
      "pct": 1.5345024780785366,
+     "measured": true,
      "ok": true
     }
    },
@@ -517,6 +541,7 @@
     "d": "2026-03-25",
     "c": 4506.49,
     "score": 3,
+    "denom": 4,
     "space": {
      "pos60": 27.213469488616216,
      "ma20": 4961.8965,
@@ -552,6 +577,7 @@
      "mild_up": true,
      "blowoff": false,
      "pct": 0.7203425817900566,
+     "measured": true,
      "ok": true
     }
    },
@@ -559,6 +585,7 @@
     "d": "2026-03-26",
     "c": 4377.85,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 18.62206223160201,
      "ma20": 4921.595,
@@ -594,6 +621,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -2.8545497715516843,
+     "measured": true,
      "ok": false
     }
    }
@@ -606,6 +634,7 @@
    "d": "2026-06-24",
    "c": 3998.95,
    "score": 2,
+   "denom": 4,
    "space": {
     "pos60": 4.290475166630817,
     "ma20": 4294.7205,
@@ -641,6 +670,7 @@
     "mild_up": false,
     "blowoff": false,
     "pct": -2.7031301322368417,
+    "measured": true,
     "ok": false
    }
   },
@@ -649,6 +679,7 @@
     "d": "2026-06-22",
     "c": 4191.18,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 19.33579079952396,
      "ma20": 4337.4450000000015,
@@ -684,6 +715,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": 0.8600773925264482,
+     "measured": true,
      "ok": true
     }
    },
@@ -691,6 +723,7 @@
     "d": "2026-06-23",
     "c": 4110.05,
     "score": 1,
+    "denom": 4,
     "space": {
      "pos60": 9.960826910410368,
      "ma20": 4317.578,
@@ -726,6 +759,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -1.9357317032434818,
+     "measured": true,
      "ok": false
     }
    },
@@ -733,6 +767,7 @@
     "d": "2026-06-24",
     "c": 3998.95,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 4.290475166630817,
      "ma20": 4294.7205,
@@ -768,6 +803,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -2.7031301322368417,
+     "measured": true,
      "ok": false
     }
    },
@@ -775,6 +811,7 @@
     "d": "2026-06-25",
     "c": 4026.51,
     "score": 3,
+    "denom": 4,
     "space": {
      "pos60": 7.253278864760296,
      "ma20": 4271.2665,
@@ -810,6 +847,7 @@
      "mild_up": true,
      "blowoff": false,
      "pct": 0.6891809099888846,
+     "measured": true,
      "ok": true
     }
    },
@@ -817,6 +855,7 @@
     "d": "2026-06-26",
     "c": 4081.02,
     "score": 3,
+    "denom": 4,
     "space": {
      "pos60": 13.113308965813808,
      "ma20": 4248.3285000000005,
@@ -852,6 +891,7 @@
      "mild_up": true,
      "blowoff": false,
      "pct": 1.3537778373827303,
+     "measured": true,
      "ok": true
     }
    },
@@ -859,6 +899,7 @@
     "d": "2026-06-29",
     "c": 4016.45,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 6.17179101268543,
      "ma20": 4224.918500000001,
@@ -894,6 +935,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": -1.5822024885935426,
+     "measured": true,
      "ok": false
     }
    }
@@ -901,180 +943,57 @@
  },
  {
   "name": "④ 当前",
-  "date": "2026-10-23",
+  "date": "2026-10-28",
   "day": {
-   "d": "2026-10-23",
-   "c": 3997.79,
+   "d": "2026-10-28",
+   "c": 4067.16,
    "score": 2,
+   "denom": 4,
    "space": {
-    "pos60": 3.0642677801051668,
-    "ma20": 4135.688999999999,
-    "lower": 4039.6580737522536,
-    "dev20": -3.3343658094213433,
-    "below_lower": true,
+    "pos60": 12.687095118534033,
+    "ma20": 4120.2195,
+    "lower": 4008.137597897118,
+    "dev20": -1.287783332902538,
+    "below_lower": false,
     "ok": true
    },
    "momentum": {
-    "prev_low": 4066.36,
-    "prev_date": "2026-10-07",
-    "area_now": 59.721144584044254,
-    "area_prev": 277.0131636806656,
-    "area_div": true,
-    "dif_higher": true,
-    "shrink": 0,
+    "prev_low": 3975.7,
+    "prev_date": "2026-10-23",
+    "area_now": 35.279803776498355,
+    "area_prev": 59.721144584044254,
+    "area_div": false,
+    "dif_higher": false,
+    "shrink": 2,
     "ok": true
    },
    "pattern": {
-    "small": false,
-    "streak": 0,
-    "no_new_low": false,
-    "body_pct": 47.81028215336662,
+    "small": true,
+    "streak": 1,
+    "no_new_low": true,
+    "body_pct": 10.366908965039475,
     "engulf": false,
     "big_yang": false,
     "ok": false
    },
    "volume": {
-    "vol": 286554,
-    "vol_ma20": 201127.13333333333,
-    "ratio": 1.4247406366851878,
+    "vol": 197994,
+    "vol_ma20": 206162.93333333332,
+    "ratio": 0.9603763237103081,
     "dry": false,
     "mild_up": false,
     "blowoff": false,
-    "pct": -0.6577606814669124,
+    "pct": 0.1731471652385519,
+    "measured": true,
     "ok": false
    }
   },
   "window": [
    {
-    "d": "2026-10-21",
-    "c": 4141.1,
-    "score": 2,
-    "space": {
-     "pos60": 18.013696608318355,
-     "ma20": 4162.5305,
-     "lower": 4071.2495708910124,
-     "dev20": -0.514843074423106,
-     "below_lower": false,
-     "ok": true
-    },
-    "momentum": {
-     "prev_low": 4066.36,
-     "prev_date": "2026-10-07",
-     "area_now": 40.40557321398063,
-     "area_prev": 277.0131636806656,
-     "area_div": false,
-     "dif_higher": false,
-     "shrink": 0,
-     "ok": false
-    },
-    "pattern": {
-     "small": false,
-     "streak": 0,
-     "no_new_low": false,
-     "body_pct": 40.32301480484689,
-     "engulf": false,
-     "big_yang": false,
-     "ok": false
-    },
-    "volume": {
-     "vol": 218391,
-     "vol_ma20": 190307.42857142858,
-     "ratio": 1.1475694965739645,
-     "dry": false,
-     "mild_up": true,
-     "blowoff": false,
-     "pct": 0.38835610460890013,
-     "ok": true
-    }
-   },
-   {
-    "d": "2026-10-22",
-    "c": 4024.26,
-    "score": 2,
-    "space": {
-     "pos60": 0.7689582902854498,
-     "ma20": 4150.0555,
-     "lower": 4054.8764507349442,
-     "dev20": -3.0311763300514936,
-     "below_lower": true,
-     "ok": true
-    },
-    "momentum": {
-     "prev_low": 4066.36,
-     "prev_date": "2026-10-07",
-     "area_now": 44.68954992541961,
-     "area_prev": 277.0131636806656,
-     "area_div": true,
-     "dif_higher": true,
-     "shrink": 0,
-     "ok": true
-    },
-    "pattern": {
-     "small": false,
-     "streak": 0,
-     "no_new_low": false,
-     "body_pct": 97.41856677524424,
-     "engulf": false,
-     "big_yang": false,
-     "ok": false
-    },
-    "volume": {
-     "vol": 249277,
-     "vol_ma20": 195025.2142857143,
-     "ratio": 1.278178316137144,
-     "dry": false,
-     "mild_up": false,
-     "blowoff": false,
-     "pct": -2.8214725556011677,
-     "ok": false
-    }
-   },
-   {
-    "d": "2026-10-23",
-    "c": 3997.79,
-    "score": 2,
-    "space": {
-     "pos60": 3.0642677801051668,
-     "ma20": 4135.688999999999,
-     "lower": 4039.6580737522536,
-     "dev20": -3.3343658094213433,
-     "below_lower": true,
-     "ok": true
-    },
-    "momentum": {
-     "prev_low": 4066.36,
-     "prev_date": "2026-10-07",
-     "area_now": 59.721144584044254,
-     "area_prev": 277.0131636806656,
-     "area_div": true,
-     "dif_higher": true,
-     "shrink": 0,
-     "ok": true
-    },
-    "pattern": {
-     "small": false,
-     "streak": 0,
-     "no_new_low": false,
-     "body_pct": 47.81028215336662,
-     "engulf": false,
-     "big_yang": false,
-     "ok": false
-    },
-    "volume": {
-     "vol": 286554,
-     "vol_ma20": 201127.13333333333,
-     "ratio": 1.4247406366851878,
-     "dry": false,
-     "mild_up": false,
-     "blowoff": false,
-     "pct": -0.6577606814669124,
-     "ok": false
-    }
-   },
-   {
     "d": "2026-10-26",
     "c": 4016.97,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 5.724867871658639,
      "ma20": 4130.790999999999,
@@ -1110,6 +1029,7 @@
      "mild_up": true,
      "blowoff": false,
      "pct": 0.4797650702012879,
+     "measured": true,
      "ok": true
     }
    },
@@ -1117,6 +1037,7 @@
     "d": "2026-10-27",
     "c": 4060.13,
     "score": 1,
+    "denom": 4,
     "space": {
      "pos60": 11.711911664747777,
      "ma20": 4124.704,
@@ -1152,6 +1073,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": 1.0744416811676594,
+     "measured": true,
      "ok": false
     }
    },
@@ -1159,6 +1081,7 @@
     "d": "2026-10-28",
     "c": 4067.16,
     "score": 2,
+    "denom": 4,
     "space": {
      "pos60": 12.687095118534033,
      "ma20": 4120.2195,
@@ -1194,6 +1117,7 @@
      "mild_up": false,
      "blowoff": false,
      "pct": 0.1731471652385519,
+     "measured": true,
      "ok": false
     }
    }

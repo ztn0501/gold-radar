@@ -8,7 +8,8 @@ bars = D["kline"]
 au = {a["d"]: a for a in D["au"]}
 c = [b["c"] for b in bars]
 N = len(bars)
-i = max(k for k in range(N) if bars[k]["d"] in au)
+# 只用伦敦金价格，不必等沪金当日数据；取最后一根 bar（盘中则取当前价）
+i = N - 1
 
 ma20 = [None] * N
 ma60 = [None] * N
@@ -96,6 +97,20 @@ elif pos250 > -25:
 else:
     zone = "低"
 
+# 逃顶阈值：从 250 日高回撤 8%（2006-2026 五个大顶平均回撤 8-10% 才该动，只展示不推送）
+DD8 = 8.0
+dd8 = bool(pos250 is not None and pos250 <= -DD8)
+dd8_days = 0
+if dd8:
+    k = i
+    while k > 0 and i - k < 250:
+        hh = max(b["h"] for b in bars[max(0, k - 249):k + 1])
+        if (c[k] / hh - 1) * 100 <= -DD8:
+            k -= 1
+        else:
+            break
+    dd8_days = i - k
+
 # 破位动作：牛+高=不动（洗盘）｜过渡=清仓（反转确认）｜其余=减半
 if not (ma60[i] and close < ma60[i]):
     ma60_action = "守住"
@@ -134,6 +149,7 @@ out = {
     "ma200_slope20": round(_slope200, 2) if _slope200 is not None else None,
     "hi250": round(hi250, 2) if hi250 else None,
     "pos250": round(pos250, 1) if pos250 is not None else None,
+    "dd8": dd8, "dd8_days": dd8_days, "dd8_thr": DD8,
     "env": env, "zone": zone, "ma60_action": ma60_action,
     "last_top3": lt, "recent_top3": recent_top,
     "ultimate": bool(recent_top and close < ma20[i]),
