@@ -614,9 +614,9 @@
  },
  "cur": {
   "date": "2026-10-29",
-  "close": 4056.63,
-  "ma60": 4292.14,
-  "gap": -5.49,
+  "close": 4059.55,
+  "ma60": 4292.19,
+  "gap": -5.42,
   "score": 3,
   "space": true,
   "lit": true,
@@ -628,7 +628,7 @@
   "deep": true,
   "firstDate": "2026-10-29",
   "firstLow": 4036.25,
-  "firstClose": 4056.63,
+  "firstClose": 4059.55,
   "firstATR": 62.51,
   "stopLow": 3911.23,
   "daysSinceFirst": 0,
@@ -637,7 +637,7 @@
   "goldGap": null,
   "exempt": false,
   "exemptWait": 20,
-  "ma20": 4114.19,
+  "ma20": 4114.33,
   "ma20Above60": false
  }
 }
