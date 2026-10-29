@@ -5,40 +5,40 @@
   "momentum": false,
   "pattern": false,
   "detail": {
-   "pos": 74.4,
-   "shadow": 9.8,
+   "pos": 52.3,
+   "shadow": 1.7,
    "cross": false,
    "diverge": false,
    "engulf": false,
-   "close": 871.36,
-   "time": "2026-10-29 10:45:00"
+   "close": 868.12,
+   "time": "2026-10-29 13:45:00"
   }
  },
  "h4": {
-  "score": 1,
+  "score": 0,
   "space": false,
   "momentum": false,
-  "pattern": true,
+  "pattern": false,
   "detail": {
-   "pos": 37.8,
-   "shadow": 28.7,
+   "pos": 29.7,
+   "shadow": 1.7,
    "cross": false,
    "diverge": false,
-   "engulf": true,
-   "close": 871.36,
-   "time": "2026-10-29 10:45:00"
+   "engulf": false,
+   "close": 868.12,
+   "time": "2026-10-29 13:45:00"
   }
  },
  "gate": {
   "trend": "down",
   "allow": false,
   "label": "趋势向下，做T信号已关闭",
-  "close": 871.36,
-  "ma20d": 888.26,
-  "ma60d": 933.87,
-  "gap60": -6.69,
+  "close": 868.12,
+  "ma20d": 888.09,
+  "ma60d": 933.82,
+  "gap60": -7.04,
   "bars": 122
  },
- "generated": "2026-10-29 02:21:10",
+ "generated": "2026-10-29 03:13:14",
  "source": "沪金主力 AU0 60m（内盘时段，跨市场代理）"
 }
