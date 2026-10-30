@@ -1,25 +1,25 @@
 {
- "score": 1,
+ "score": 0,
  "space": false,
  "momentum": false,
- "pattern": true,
+ "pattern": false,
  "volume": false,
  "detail": {
-  "pos120": 10.3,
-  "dev20": -2.22,
-  "upper": 4229.16,
-  "close": 4021.23,
-  "ma20": 4112.42,
+  "pos120": 0.8,
+  "dev20": -5.43,
+  "upper": 4253.91,
+  "close": 3876.69,
+  "ma20": 4099.29,
   "below_ma20": true,
   "touch_upper": false,
   "top_div": false,
   "red_shrink": false,
   "death": false,
-  "upper_shadow": 2.0,
-  "bear_engulf": true,
-  "ret3": 0.11,
-  "vr": 0.9
+  "upper_shadow": 1.6,
+  "bear_engulf": false,
+  "ret3": -4.52,
+  "vr": 1.16
  },
- "date": "2026-10-29",
+ "date": "2026-10-30",
  "last_top3": null
 }
