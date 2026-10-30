@@ -92,6 +92,7 @@ def main():
     yseq = load("yellow_seq.json", {}) or {}
     ma = load("radar_ma.json", {}) or {}
     top = load("radar_top.json", {}) or {}
+    ve = load("volenv.json", {}) or {}
     data = load("data.json", {}) or {}
 
     kl = data.get("kline") or []
@@ -113,7 +114,81 @@ def main():
     zone = ma.get("zone") or "—"
     pos250 = ma.get("pos250")
 
+    # 波动率环境（2026-10-30）：磨底雷达的阈值是绝对百分比，低波动时等价于 7 倍日波动，信号多为噪音
+    # 分箱实测：60日均振幅 <1.1% 胜率 47%，1.1-1.3% 67%，1.3-1.6% 82%，>1.6% 68%
+    _amp = ve.get("amp"); _pct = ve.get("pct"); _gr = ve.get("grade") or ""
+    _pt = ("（历史 %s%% 分位）" % _pct) if _pct is not None else ""
+    if _amp is None:
+        vol_line = "**波动环境** 数据不足（60 日均振幅未算出）"
+    elif _gr == "low":
+        vol_line = "**波动环境** %.2f%%%s → **低波动，阈值失配，这个黄灯只当提示**" % (_amp, _pt)
+    elif _gr == "mid":
+        vol_line = "**波动环境** %.2f%%%s → 中性，信号中等" % (_amp, _pt)
+    else:
+        vol_line = "**波动环境** %.2f%%%s → 高波动，信号可信" % (_amp, _pt)
+
+    # 人民币视角（2026-10-30）：用户持人民币积存金，美元金价的涨跌不是他实际的盈亏
+    fe = load("fxenv.json", {}) or {}
+    fx_line = ""
+    if fe.get("cny"):
+        _hi = None
+        for _r in (fe.get("rows") or []):
+            if str(_r.get("k", "")).startswith("2026"):
+                _hi = _r
+        if _hi:
+            fx_line = "**人民币金价** %.1f 元/克（汇率 %.4f）｜自高点 美元 %+.1f%% → 人民币 %+.1f%%（差额 %.1f 个点来自汇率）" % (
+                fe["cny"], fe["fx"], _hi["usd"], _hi["cny"], abs(_hi["drag"]))
+        else:
+            fx_line = "**人民币金价** %.1f 元/克（汇率 %.4f）" % (fe["cny"], fe["fx"])
+
+    # 宏观环境（2026-10-30）：实际利率是黄金的机会成本，只描述逆风强度，不产生信号
+    me = load("macroenv.json", {}) or {}
+    ma_line = ""
+    if me.get("r") is not None:
+        _d = me.get("d60")
+        _trend = "逆风加强" if (_d or 0) > 10 else ("逆风减弱" if (_d or 0) < -10 else "逆风持平")
+        ma_line = "**宏观** 10Y 实际利率 %.2f%%（2010 以来 %.0f%% 分位）｜60日 %+dbp · %s" % (
+            me["r"], me.get("pct") or 0, _d or 0, _trend)
+        if me.get("sincePeakBp") is not None:
+            ma_line += "｜金价见顶以来 %+dbp" % me["sincePeakBp"]
+
+    # 风险温度（2026-10-30）：只描述恐慌强度与归属，不做信号
+    re_ = load("riskenv.json", {}) or {}
+    risk_line = ""
+    if re_.get("gvz") is not None:
+        _tag = ("黄金专属" if (re_.get("ratio") or 0) > 1.3
+                and (re_.get("gvzPct") or 0) >= 70 else
+                ("全市场" if (re_.get("vixPct") or 0) >= 70 else "常态"))
+        risk_line = "**风险** VIX %.1f（%d%% 分位）｜GVZ %.1f（%d%% 分位）｜%s" % (
+            re_["vix"], re_.get("vixPct") or 0, re_["gvz"], re_.get("gvzPct") or 0, _tag)
+
     msgs = []
+
+    # 参照低点（2026-10-30）：第 2 档的触发线。
+    # 不能直接用 250 日窗口最低价 —— 窗口每天滑动，触发价会跟着下跌往下爬，破了也显示「还没破」。
+    rl = load("ref_low.json", {}) or {}
+    rl_usd = rl.get("usd") or 0
+    rl_line = ""
+    if rl_usd and price:
+        _rg = (price / rl_usd - 1) * 100
+        rl_line = "**参照低点** %.2f（%s）｜距 %+.1f%%%s" % (
+            rl_usd, rl.get("d", "--"), _rg,
+            "　已破，第 2 档条件成立" if _rg <= 0 else ("　逼近，第 2 档待命" if _rg <= 3 else ""))
+
+    # 0) 跌破参照低点 → 第 2 档触发（用收盘价，不用盘中价，避免假破位）
+    if rl_usd and price and price < rl_usd and st.get("reflow") != today:
+        msgs.append((
+            "reflow",
+            "【跌破参照低点】%s · 收 %.0f < %.2f" % (today, price, rl_usd),
+            "\n\n".join([x for x in [
+                "**收盘** %.2f　<　参照低点 %.2f（%+.2f%%）" % (price, rl_usd, (price / rl_usd - 1) * 100),
+                "该价位是 %s 的 250 日最低点，已锁定为第 2 档触发线，不随窗口滑动。" % rl.get("d", "--"),
+                fx_line or None,
+                "**动作**：第 2 档（30%）条件成立 —— 但**第 1 档没执行完，这笔钱不许动**。",
+                "再跌破 3500（自高点 -37.5%）→ 三档全部作废，停止加仓，重新评估。",
+                "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
+            ] if x])
+        ))
 
     # 1) 磨底黄灯（买点）
     cur = yseq.get("cur") or {}
@@ -124,7 +199,7 @@ def main():
         msgs.append((
             "yellow",
             "【磨底黄灯】%s 本轮第%s次 %.0f" % (today, cur.get("curSeq", "?"), price),
-            "\n\n".join([
+            "\n\n".join([x for x in [
                 "**收盘** %.2f　MA60 %.2f（%+.2f%%）" % (price, ma60, gap60),
                 "**雷达** %s/%s 分%s｜空间%s" % (
                     cur.get("score", "?"), cur.get("denom", 4),
@@ -132,9 +207,14 @@ def main():
                     "达标" if cur.get("space") else "未达标"),
                 "这一轮第 **%s** 次｜上一轮最后一次 %s（第 %s 次）" % (
                     cur.get("curSeq", "?"), _pe.get("date", "-"), _pe.get("seq", "-")),
+                vol_line,
+                fx_line or None,
+                rl_line or None,
+                ma_line or None,
+                risk_line or None,
                 "**动作**：第 1 次 30%%，第 2 次 30%%，第 3 次起不加仓。\n试仓止损 %s。" % (cur.get("stopLow") or "—"),
                 "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
-            ])
+            ] if x])
         ))
 
     # 2) MA60 破位（卖点）—— 破位第 1 天推一次，之后每 5 个交易日补一次
@@ -145,16 +225,31 @@ def main():
     except Exception:
         last_d60 = 0
     if ma.get("below60") and d60 >= 1 and (d60 == 1 or (d60 - last_d60) >= 5):
+        # 偏离 MA200：破位推送里给一行「还有多少下跌空间」（2026-10-30）
+        _m2 = {}
+        try:
+            _m2 = load("ma200env.json", {}) or {}
+        except Exception:
+            _m2 = {}
+        m2_line = ""
+        if _m2.get("dev") is not None:
+            m2_line = "**偏离 MA200** %+.1f%%（历史 %s%% 分位，极值 %s%%）" % (
+                _m2["dev"], _m2.get("pct", "--"), _m2.get("min", "--"))
         msgs.append((
             "break60",
             "【跌破 MA60】%s · %s（第%d日）" % (today, action, d60),
-            "\n\n".join([
+            "\n\n".join([x for x in [
                 "**收盘** %.2f　<　MA60 %.2f（%+.2f%%）" % (price, ma60, gap60),
                 "**环境** %s　**位置** %s（距一年高 %s）" % (env, zone, ("%s%%" % pos250) if pos250 is not None else "--"),
+                m2_line or None,
+                fx_line or None,
+                rl_line or None,
+                ma_line or None,
+                risk_line or None,
                 "**判定**：%s" % action,
                 "牛+高位→不动｜过渡期→清仓｜其余→减半。\n买回：站上 MA60 连续 2 日。",
                 "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
-            ])
+            ] if x])
         ))
 
     # 3) 超买雷达 —— 2026-10 起停止推送（它是超买提示，不是卖点）
@@ -178,6 +273,28 @@ def main():
                 ])
             ))
 
+    # 4) 数据自检未通过（2026-10-30）—— 优先级最高的告警
+    # 场景：接口返回 402.1 而非 4021，若不放行拦截，全链会按 402.1 计算并推送"全线破位"
+    va = load("validation.json", {}) or {}
+    if va.get("status") == "fail":
+        _fl = va.get("fails") or []
+        _tag = "%s|%d" % (va.get("time") or "", len(_fl))
+        if st.get("validation") != _tag:
+            msgs.append((
+                "validation",
+                "【数据自检未通过】已拦截，本日不更新",
+                "\n\n".join([
+                    "**拦截了 %d 项异常**（共 %d 项检查）" % (len(_fl), len(va.get("checks") or [])),
+                    "\n".join(["· **%s**：%s" % (f["n"], f["d"]) for f in _fl]),
+                    ("**已回滚**到上一份有效数据，页面与信号仍基于旧行情。" if va.get("rolledBack")
+                     else ("**已丢弃最新一根** %s。" % va["dropped"]) if va.get("dropped")
+                     else "**无备份可回滚**，请人工检查 data_full.json。"),
+                    "**不要按今天的信号操作**。先去 Actions 看 fetch_full.py 的日志，确认是接口异常还是真行情。",
+                    "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
+                ])
+            ))
+            st["validation"] = _tag
+
     todo = [(k, t, d) for k, t, d in msgs if st.get(k) != today]
     for k, _, _ in msgs:
         if st.get(k) == today:
@@ -199,6 +316,10 @@ def main():
             "\n\n".join([
                 "**收盘** %.2f　MA60 %.2f（%+.2f%%）" % (price, ma60, gap60),
                 "**环境** %s　**位置** %s（距一年高 %s）　**动作** %s" % (env, zone, ("%s%%" % pos250) if pos250 is not None else "--", action),
+                fx_line or "**人民币金价** 数据未就绪",
+                rl_line or "**参照低点** 未锁定（ref_low.json 缺失）",
+                ma_line or "**宏观** 实际利率数据未就绪",
+                risk_line or "**风险** VIX/GVZ 数据未就绪",
                 "**磨底雷达** %s/%s｜上次黄灯 %s（第 %s 次）" % (
                     (yseq.get("cur") or {}).get("score", "-"),
                     (yseq.get("cur") or {}).get("denom", 4),
@@ -216,7 +337,7 @@ def main():
     if not keys and not (mu and mp):
         for k, title, desp in todo:
             print("[dry-run] %s" % title)
-            print("         " + desp.replace("\n\n", " / ").replace("\n", " ")[:200])
+            print("         " + desp.replace("\n\n", " / ").replace("\n", " ")[:420])
         print("[skip] 未配置推送通道（SERVERCHAN_KEY 或 MAIL_USER/MAIL_PASS），未实际发送")
         return
 

@@ -4,6 +4,19 @@ import os
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+# data.json 由 fetch_full.py 生成。若不存在（例如直接解包后单独跑本脚本），
+# 用 data_full.json 现场造一份，保证「只跑 build_page 也能出页面」。
+if not os.path.exists("data.json"):
+    _df = json.load(open("data_full.json", encoding="utf-8"))
+    _k = _df.get("kline") or []
+    _last = _k[-1] if _k else {"d": "", "o": 0, "h": 0, "l": 0, "c": 0}
+    json.dump({"kline": _k[-400:], "au": (_df.get("au") or [])[-400:],
+               "live": {"price": _last["c"], "prevClose": (_k[-2]["c"] if len(_k) > 1 else _last["c"]),
+                        "open": _last["o"], "high": _last["h"], "low": _last["l"],
+                        "time": "", "date": _last["d"], "_fallback": True},
+               "auLive": None, "fx": 0, "fxTime": ""},
+              open("data.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("[warn] data.json 缺失，已用 data_full.json 生成兜底快照")
 data = json.load(open("data.json", encoding="utf-8"))
 try:
     data["signals"] = json.load(open("signals.json", encoding="utf-8"))
@@ -104,11 +117,286 @@ if len(_kb) >= 130:
     data["channel"] = {"hi120": round(_hi120, 2), "dist": round(_dist, 2),
                        "upperShadow": round(_us, 1),
                        "active": bool(_dist >= -2.0 and _us > 40)}
+    # ---------- 波动率环境（2026-10-30 新增）：60 日均振幅 + 历史分位 ----------
+    # 注意：磨底雷达四项本来都是相对量（位置百分位、量比、实体占振幅比），
+    # 并不存在「3日涨6%」这类绝对阈值 —— 那是超买雷达的参数。
+    # 但实测发现：低波动期四项通过率反而更高（动能 93% vs 75%），
+    # 因为横盘时 MACD 天然萎缩、小实体 K 线天然连续，门槛被「低波动」本身喂饱。
+    # 结果：1992-1998（振幅 0.80%）15 次信号胜率仅 33%，2018（0.9%）6 次里 5 次失败。
+    # 分箱实测：<1.1% 胜率 47% / 1.1-1.3% 67% / 1.3-1.6% 82% / >1.6% 68%。
+    # 结论：不是尺子的问题，是这批样本本身没有底 → 只标注、不改判定。
+    _amps = []
+    _win = 0.0
+    for _j in range(_n):
+        _win += (_h[_j] - _l_[_j]) / _c[_j] * 100
+        if _j >= 60:
+            _win -= (_h[_j-60] - _l_[_j-60]) / _c[_j-60] * 100
+        if _j >= 59:
+            _amps.append(_win / 60.0)
+    _a0 = _amps[-1]
+    _ah = sorted(_amps[180:]) if len(_amps) > 300 else sorted(_amps)
+    _amed = _ah[len(_ah)//2]
+    _apct = sum(1 for _x in _ah if _x < _a0) / len(_ah) * 100
+    _agr = "low" if _a0 < 1.1 else ("mid" if _a0 < 1.3 else "high")
+    # 样本不足 1000 天时不报分位（抓数失败会回退到包内的小样本，分位会失真）
+    _ok_hist = len(_ah) >= 1000
+    data["volenv"] = {"amp": round(_a0, 2),
+                      "pct": (round(_apct) if _ok_hist else None),
+                      "med": (round(_amed, 2) if _ok_hist else None),
+                      "grade": _agr, "n": len(_ah)}
+    # ---------- 偏离 MA200（2026-10-30 新增）：还有多少下跌空间 ----------
+    # 依据：1992-2026 全样本，偏离 MA200 ≤ -10% 共 18 次（20 日去重）：
+    # T+60 中位 +3.3%（67% 涨）、T+250 中位 +1.0%（50%），后续 250 日最低中位 -8.4%、最深 -20.7%。
+    # 即短期偏反弹、一年后对半开；深度看的是「离历史极值还有多远」。
+    _dev_s = []
+    _m200_prev = None
+    if _n >= 220:
+        _s = sum(_c[:200]); _m200 = _s / 200
+        for _j in range(200, _n):
+            _s += _c[_j] - _c[_j - 200]
+            _m200 = _s / 200
+            _dev_s.append((_c[_j] / _m200 - 1) * 100)
+            if _j == _n - 21: _m200_prev = _m200
+        _d0 = _dev_s[-1]
+        _ds = sorted(_dev_s[120:]) if len(_dev_s) > 500 else sorted(_dev_s)
+        _dpct = sum(1 for _x in _ds if _x < _d0) / len(_ds) * 100
+        _dmin = min(_dev_s)
+        _m200_now = _m200
+        _slope = ((_m200 / _m200_prev - 1) * 100) if _m200_prev else None
+        _ok200 = len(_ds) >= 1000
+        data["ma200env"] = {
+            "dev": round(_d0, 1),
+            "ma200": round(_m200_now, 1),
+            "pct": (round(_dpct) if _ok200 else None),
+            "slope": (round(_slope, 2) if _slope is not None else None),
+            "min": (round(_dmin, 1) if _ok200 else None),
+            "n": len(_ds),
+            # 到历史极值还有多少（用极值偏离反推价位）
+            "to_min": (round((_m200_now * (1 + _dmin / 100) / _c[-1] - 1) * 100, 1) if _ok200 else None),
+            # 到 -15% / -20% 两个参照档
+            "p15": (round((_m200_now * 0.85 / _c[-1] - 1) * 100, 1)),
+            "p20": (round((_m200_now * 0.80 / _c[-1] - 1) * 100, 1)),
+        }
 else:
     data["trend"] = {}
     data["channel"] = {}
 
+# ---------- 人民币视角（2026-10-30 新增）：汇率 + 元/克 ----------
+# 起因：整个系统只看美元金价，而用户持的是人民币积存金。
+# 人民币升值 1%，持仓被动 -1%，系统此前零计算。
+# 实测（2026-10-30）：近 250 日美元金价 -2.30%，人民币金价 -8.55% —— 汇率多让 6.26 个点。
+# 即「美元没怎么跌」和「我亏了不少」可以同时为真，两者差的就是汇率。
+try:
+    import bisect as _bs
+    _raw = json.load(open("fx_hist.json", encoding="utf-8"))
+    if isinstance(_raw, dict):                     # 紧凑格式 {"d":[...], "c":[...]}
+        _fxr = [{"d": a, "c": b} for a, b in zip(_raw["d"], _raw["c"])]
+    else:                                          # 旧格式 [{d,o,h,l,c}, ...]
+        _fxr = _raw
+    _fxd = [r["d"] for r in _fxr]
+    _G = 31.1035
+
+    def _fx_at(ds):
+        i = _bs.bisect_right(_fxd, ds) - 1
+        return _fxr[i]["c"] if i >= 0 else None
+
+    if len(_kb) > 260 and _fxr:
+        _c_arr = [x["c"] for x in _kb]
+        _d_arr = [x["d"] for x in _kb]
+        _fx_now = _fx_at(_d_arr[-1])
+        _cny_now = _c_arr[-1] * _fx_now / _G
+        # 区间分解：Δln(元/克) ≈ Δln(美元) + Δln(汇率)
+        _rows = []
+        def _row(label, i0):
+            u0, u1 = _c_arr[i0], _c_arr[-1]
+            f0, f1 = _fx_at(_d_arr[i0]), _fx_now
+            du = (u1 / u0 - 1) * 100
+            df = (f1 / f0 - 1) * 100
+            dc = ((u1 * f1) / (u0 * f0) - 1) * 100
+            return {"k": label, "usd": round(du, 2), "fx": round(df, 2),
+                    "cny": round(dc, 2), "drag": round(dc - du, 2)}
+        for _lbl, _n in (("20 日", 20), ("60 日", 60), ("250 日", 250)):
+            if len(_c_arr) > _n:
+                _rows.append(_row(_lbl, len(_c_arr) - 1 - _n))
+        _hi_i = max(range(len(_kb)), key=lambda i: _kb[i]["h"])
+        _pct_from_hi = (_c_arr[-1] / _kb[_hi_i]["h"] - 1) * 100
+        _cny_from_hi = ((_c_arr[-1] * _fx_now) / (_kb[_hi_i]["h"] * _fx_at(_d_arr[_hi_i])) - 1) * 100
+        _rows.append({"k": "2026 高点至今", "usd": round(_pct_from_hi, 2),
+                      "fx": round((_fx_now / _fx_at(_d_arr[_hi_i]) - 1) * 100, 2),
+                      "cny": round(_cny_from_hi, 2),
+                      "drag": round(_cny_from_hi - _pct_from_hi, 2)})
+        # 汇率位置：2005-07 汇改后才有浮动意义
+        _post = [r["c"] for r in _fxr if r["d"] >= "2005-07-22"]
+        _fpct = sum(1 for x in _post if x < _fx_now) / len(_post) * 100
+        # 人民币金价（汇改后）历史最高与回撤
+        _cny_hist = []
+        for _i, _d in enumerate(_d_arr):
+            if _d >= "2005-07-22":
+                _f = _fx_at(_d)
+                if _f:
+                    _cny_hist.append(_c_arr[_i] * _f / _G)
+        _cny_max = max(_cny_hist) if _cny_hist else None
+        # 关键价位映射成元/克（用户按元/克下单）
+        def _to_cny(usd):
+            return round(usd * _fx_now / _G, 1) if usd else None
+        _ma = data.get("ma") or {}
+        _m2 = data.get("ma200env") or {}
+        _lv = []
+        # 参照低点：第 2 档的触发线必须锁死。
+        # 若直接用 250 日窗口最低价，窗口每天滑动 → 触发价跟着价格跑：
+        # 今天破了 3943，明天窗口最低就变成今天的低点，页面会显示「还没破」。
+        # 所以第一次算出来后写进 ref_low.json，之后只读不改。
+        _lo250 = min(_kb[-250:], key=lambda x: x["l"])
+        _rl_path = "ref_low.json"
+        try:
+            _rl = json.load(open(_rl_path, encoding="utf-8"))
+        except Exception:
+            _rl = {}
+        if not _rl.get("usd"):
+            _rl = {"usd": round(_lo250["l"], 2), "d": _lo250["d"],
+                   "note": "本轮参照低点，第 2 档触发线；锁定后不随 250 日窗口滑动"}
+            json.dump(_rl, open(_rl_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        for _nm, _v in (("MA200", _m2.get("ma200")), ("MA60", _ma.get("ma60")),
+                        ("MA20", _ma.get("ma20")),
+                        ("参照低点", _rl.get("usd"))):
+            if _v:
+                # 参照低点保留 2 位：第 2 档要按它精确触发，不能四舍五入到 3943.7
+                _d = 2 if _nm == "参照低点" else 1
+                _lv.append({"n": _nm, "usd": round(_v, _d), "cny": _to_cny(_v),
+                            "gap": round((_v / _c_arr[-1] - 1) * 100, 1)})
+        data["fxenv"] = {
+            "fx": round(_fx_now, 4),
+            "cny": round(_cny_now, 2),
+            "cnyHi": round(_cny_max, 1) if _cny_max else None,
+            "cnyDD": round((_cny_now / _cny_max - 1) * 100, 1) if _cny_max else None,
+            "pct": round(_fpct),
+            "min": round(min(_post), 4), "max": round(max(_post), 4),
+            "rows": _rows,
+            # 人民币每动 1%，元/克动多少
+            "sens": round(_cny_now * 0.01, 1),
+            "levels": _lv,
+            "refLow": {"usd": _rl.get("usd"), "d": _rl.get("d")},
+        }
+except Exception as _e:
+    data["fxenv"] = {}
+    print("[warn] 汇率环境计算失败：", _e)
+
+
+# ── 宏观环境：美国 10 年期 TIPS 实际利率（2026-10-30）──────────────
+# 黄金没有现金流，定价锚是扣除通胀后的实际利率。这是唯一一个既有可靠免费源、
+# 又不依赖解读的宏观变量。实测 17 年：利率 60 日变化与金价 60 日收益相关仅 -0.03，
+# 分箱统计因样本时段集中而不可用 —— 所以只做环境描述，不进任何买卖规则。
+try:
+    import bisect as _bis
+    _M = json.load(open("macro_hist.json", encoding="utf-8"))
+    _md, _mv = _M["d"], _M["v"]
+    _kk = data["kline"]
+    def _rat(ds):
+        _i = _bis.bisect_right(_md, ds) - 1
+        return _mv[_i] if _i >= 0 else None
+    _s = [(b["d"], _rat(b["d"]), b["c"]) for b in _kk
+          if b["d"] >= _md[0] and _rat(b["d"]) is not None]
+    if len(_s) > 300:
+        # 分位用 2010 以来全序列（4200+ 日），不是页面那 400 根
+        _all = list(_mv)
+        _cur = _mv[-1]
+        _pct = sum(1 for x in _all if x < _cur) / len(_all) * 100
+        _mx = max(_mv); _mxd = _md[_mv.index(_mx)]
+        # 金价最高点当天的实际利率
+        _full = data["kline"]
+        try:
+            _full = (json.load(open("data_full.json", encoding="utf-8")).get("kline") or _kk)
+        except Exception:
+            pass
+        _hi = max(_full, key=lambda x: x["h"])
+        _rh = _rat(_hi["d"]) or _cur
+        # 利率自己见顶之后，金价动了多少
+        _gp = None
+        for b in reversed(_kk):
+            if b["d"] <= _mxd:
+                _gp = b["c"]; break
+        data["macroenv"] = {
+            "r": round(_cur, 2),
+            "pct": round(_pct, 1),
+            "min": round(min(_all), 2), "max": round(_mx, 2), "maxDate": _mxd,
+            "d60": round((_mv[-1] - _mv[-61]) * 100),
+            "d250": round((_mv[-1] - _mv[-251]) * 100) if len(_mv) > 251 else None,
+            "n": len(_mv), "from": _md[0],
+            # 金价见顶那一档利率 → 现在
+            "peakDate": _hi["d"], "peakPx": round(_hi["h"], 1), "peakR": round(_rh, 2),
+            "sincePeakBp": round((_cur - _rh) * 100),
+            "sincePeakPx": round((_kk[-1]["c"] / _hi["h"] - 1) * 100, 1),
+            # 利率自己见顶之后：利率回落多少、金价同期又跌了多少
+            "rSinceTopBp": round((_cur - _mx) * 100),
+            "pxSinceTop": round((_kk[-1]["c"] / _gp - 1) * 100, 1) if _gp else None,
+            "pxAtTop": round(_gp, 1) if _gp else None,
+            "hiShare": round(sum(1 for x in _all if x > 2.5) / len(_all) * 100, 1),
+        }
+    else:
+        data["macroenv"] = {}
+except Exception as _e:
+    data["macroenv"] = {}
+    print("[warn] 宏观环境计算失败：", _e)
+
+# ── 风险温度：VIX（股市恐慌）/ GVZ（黄金恐慌）（2026-10-30）────────
+# 目的是回答「这次下跌是不是恐慌」，不是产生信号。实测（见交接书三之八）：
+#   · VIX 分档与金价后续收益无单调关系（<14 档 49%、>30 档 54%、20-30 档 62%）
+#   · GVZ>30 的 126 天聚类后只有 9 段，T+60 胜率 56% ≈ 基准 60%，原先算出的 28% 是伪样本
+#   · GVZ/VIX 比值从 1.1 到 1.6 逐个测，胜率 41→50→54→44→30→42→40→55→54，不单调，1.30 是噪声低点
+# 所以这里只做两件事：量「恐慌有多强」和「恐慌是黄金专属还是全市场」。
+try:
+    _R = json.load(open("risk_hist.json", encoding="utf-8"))
+    _pair = [(d, v, g) for d, v, g in zip(_R["d"], _R["vix"], _R["gvz"]) if v and g]
+    if len(_pair) > 1000:
+        import bisect as _b2
+        _vs = sorted(x[1] for x in _pair)
+        _gs = sorted(x[2] for x in _pair)
+        _cv, _cg = float(_pair[-1][1]), float(_pair[-1][2])
+
+        def _pc(arr, x):
+            return round(_b2.bisect_left(arr, x) / len(arr) * 100, 1)
+
+        _i20 = max(len(_pair) - 21, 0)
+        data["riskenv"] = {
+            "vix": round(_cv, 2), "vixPct": _pc(_vs, _cv),
+            "gvz": round(_cg, 2), "gvzPct": _pc(_gs, _cg),
+            "ratio": round(_cg / _cv, 2),
+            "ratio20": round(_pair[_i20][2] / _pair[_i20][1], 2),
+            "gvz20": round(_cg - _pair[_i20][2], 2),
+            "vix20": round(_cv - _pair[_i20][1], 2),
+            # 历史上「黄金恐慌明显高于股市」的天数占比，用来判断当下是否异常
+            "goldOnly": round(sum(1 for _, v, g in _pair if g > 1.3 * v) / len(_pair) * 100, 1),
+            "vixMin": round(_vs[0], 2), "vixMax": round(_vs[-1], 2),
+            "gvzMin": round(_gs[0], 2), "gvzMax": round(_gs[-1], 2),
+            "n": len(_pair), "from": _pair[0][0], "to": _pair[-1][0],
+        }
+    else:
+        data["riskenv"] = {}
+except Exception as _e:
+    data["riskenv"] = {}
+    print("[warn] 风险温度计算失败：", _e)
+
+# 数据自检结果（2026-10-30）：validate.py 产出，页面顶部显示，fail 时红字警示
+try:
+    data["validation"] = json.load(open("validation.json", encoding="utf-8"))
+except Exception:
+    data["validation"] = {}
+
 payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+# 波动率环境单独落一份，给 gha/notify.py 拼推送文案用（2026-10-30）
+try:
+    if data.get("volenv"):
+        json.dump(data["volenv"], open("volenv.json", "w", encoding="utf-8"), ensure_ascii=False)
+    if data.get("ma200env"):
+        json.dump(data["ma200env"], open("ma200env.json", "w", encoding="utf-8"), ensure_ascii=False)
+    if data.get("fxenv"):
+        json.dump(data["fxenv"], open("fxenv.json", "w", encoding="utf-8"), ensure_ascii=False)
+    if data.get("macroenv"):
+        json.dump(data["macroenv"], open("macroenv.json", "w", encoding="utf-8"), ensure_ascii=False)
+    if data.get("riskenv"):
+        json.dump(data["riskenv"], open("riskenv.json", "w", encoding="utf-8"), ensure_ascii=False)
+except Exception:
+    pass
 
 html = r"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -132,12 +420,124 @@ h1{font-size:17px;font-weight:600;letter-spacing:.5px;color:var(--dim)}
 .chg{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
 .meta{font-size:12px;color:var(--dim);display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
 .meta b{color:#c9d1d9;font-weight:500}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.refbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11.5px;
+  padding:8px 11px;border-radius:7px;margin:-4px 0 14px;
+  border:1px solid #2b3440;background:#0f141b;color:#9aa4b2;line-height:1.6}
+.refbar .rb-t{font-weight:600;letter-spacing:.2px}
+.refbar .rb-n{font-variant-numeric:tabular-nums;font-weight:700}
+.refbar.warn{border-color:#5a4a22;background:#1a1608}
+.refbar.warn .rb-t{color:#e8c35a}
+.refbar.broken{border-color:#5c2b2b;background:#1a0d0d}
+.refbar.broken .rb-t{color:#f0524d}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
 @media(max-width:820px){.grid{grid-template-columns:repeat(2,1fr)}}
+.qref{margin:0 0 14px;background:#0e1318;border:1px solid #222a35;border-radius:8px}
+.qref>summary{cursor:pointer;padding:10px 13px;font-size:12.5px;color:#c9d1d9;font-weight:600;list-style:none;user-select:none}
+.qref>summary::-webkit-details-marker{display:none}
+.qref>summary:before{content:"▸ ";color:#58a6ff}
+.qref[open]>summary:before{content:"▾ "}
+.qwrap{overflow-x:auto;border-top:1px solid #222a35}
+.qtab{width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px}
+.qtab th{background:#141a22;color:#8b949e;font-weight:500;text-align:left;padding:7px 9px;white-space:nowrap;border-bottom:1px solid #222a35}
+.qtab td{padding:7px 9px;border-top:1px solid #1a212b;color:#a9b4c0;vertical-align:top;line-height:1.55}
+.qtab tr.on td{background:#151c25}
+.qtab .qn{color:#e6edf3;font-weight:600;white-space:nowrap}
+.qtab .qa{color:#c9d1d9}
+.qtab .qh{color:#7d8590;font-size:11px}
+.qtab .qs{white-space:nowrap;font-weight:600}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 13px}
 .card .k{font-size:11px;color:var(--dim);margin-bottom:6px}
 .card .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .card .s{font-size:11px;color:var(--dim);margin-top:4px}
+/* ---- 人民币视角 / 决策纪律（2026-10-30） ---- */
+.fxstat{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:11px}
+@media(max-width:760px){.fxstat{grid-template-columns:repeat(2,1fr)}}
+.fxs{background:#11161d;border:1px solid #222b36;border-radius:9px;padding:9px 11px}
+.fxs .l{font-size:10.5px;color:#7d8794;margin-bottom:3px;white-space:nowrap}
+.fxs .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.fxs .d{font-size:10px;color:#6e7681;margin-top:3px;line-height:1.55}
+table.fxt{width:100%;border-collapse:collapse;font-size:11.5px;min-width:430px}
+table.fxt th{background:#141a22;color:#8b949e;font-weight:500;text-align:right;padding:6px 8px;white-space:nowrap;border-bottom:1px solid #222a35}
+table.fxt th:first-child,table.fxt td:first-child{text-align:left}
+table.fxt th:last-child,table.fxt td:last-child{padding-right:13px}
+table.fxt td{padding:6px 8px;border-top:1px solid #1a212b;color:#a9b4c0;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.fxt tr.sum td{background:#151c25;font-weight:600;color:#e6edf3}
+table.fxt.fxtl th,table.fxt.fxtl td{text-align:left;white-space:normal}
+table.fxt.fxtl td{line-height:1.75;padding:8px}
+.wt{border:1px solid #232a34;border-radius:9px;overflow:hidden;background:#10151c}
+.wtr{display:grid;grid-template-columns:132px 1fr 1fr;border-top:1px solid #1a212b}
+.wtr:first-child{border-top:0}
+.wtc{padding:9px 11px;font-size:11.5px;color:#a9b4c0;line-height:1.75}
+.wtc.a{color:#e6edf3;font-weight:600;background:#131a22;display:flex;align-items:center}
+.wtc.b{border-left:1px solid #1a212b}
+@media(max-width:760px){
+  .wtr{grid-template-columns:1fr}
+  .wtc.a{background:#151c25;border-bottom:1px solid #1e252f;padding-bottom:7px}
+  .wtc.b{border-left:0;padding-bottom:5px}
+  .wtc.b::before{content:"现状 · ";color:#5a6371}
+  .wtc.c::before{content:"代价 · ";color:#5a6371}
+}
+.fxnote{font-size:11px;color:#7d8794;line-height:1.8;margin-top:9px}
+.tran{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+@media(max-width:760px){.tran{grid-template-columns:1fr}}
+.trc{background:#11161d;border:1px solid #222b36;border-radius:9px;padding:10px 12px;position:relative}
+.trc .n{font-size:10.5px;color:#7d8794}
+.trc .a{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin:3px 0 2px}
+.trc .p{font-size:11px;color:#a9b4c0;line-height:1.7}
+.trc .c{font-size:10px;color:#6e7681;margin-top:4px;line-height:1.6}
+.trc.t1{border-color:#5a4a1c}
+.trc.t1 .a{color:#e8c35a}
+.trc.t2 .a{color:#58a6ff}
+.trc.t3 .a{color:#26a69a}
+.szt{width:100%;border-collapse:collapse;font-size:11.5px}
+.szt th{font-size:10px;color:#5a6371;font-weight:500;text-align:right;padding:5px 9px;border-bottom:1px solid #1e252f;white-space:nowrap}
+.szt th:first-child,.szt td:first-child{text-align:left}
+.szt td{padding:6px 9px;text-align:right;border-bottom:1px solid #161d26;color:#c9d1d9;font-variant-numeric:tabular-nums;white-space:nowrap}
+.szt td:first-child{color:#9aa4b2}
+.szt tr.key td{background:#131a22;font-weight:600;color:#e6edf3}
+.szt tr.sub td{border-bottom:0;padding-top:5px;padding-bottom:5px;font-size:11px}
+.szt tr.sub td:first-child{color:#6e7681;padding-left:22px}
+.szt tr.sub td:last-child{color:#7d8794;font-size:10.5px}
+.szc{border-left:2px solid #30363d;padding:8px 0 8px 11px;font-size:11.5px;color:#a9b4c0;line-height:1.85}
+.szchip{display:inline-block;border:1px solid #2b3440;border-radius:12px;padding:2px 9px;font-size:10.5px;color:#7d8794;margin:0 6px 6px 0}
+.szchip.on{border-color:#e8c35a;color:#e8c35a;background:rgba(232,195,90,.07)}
+.szchip.hi{border-color:#f0524d;color:#f0524d;background:rgba(240,82,77,.07)}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px}
+.mcell{background:#11161d;border:1px solid #222b36;border-radius:9px;padding:9px 11px}
+.mcell .k{font-size:10.5px;color:#7d8794;margin-bottom:3px}
+.mcell .v{font-size:17px;font-weight:700;color:#e6edf3;font-variant-numeric:tabular-nums}
+.mcell .s{font-size:10.5px;color:#9aa4b2;margin:3px 0 5px}
+.mcell .d{font-size:10.5px;color:#6e7681;line-height:1.75}
+.whybox{border:1px solid #262d38;border-left:2px solid #4a3d1c;border-radius:7px;background:#0f141b;padding:9px 12px;margin-bottom:9px}
+.msrc{font-size:10px;color:#5a6371;line-height:1.75}
+.msrc>div{padding:1.5px 0}
+.msrc>div.cx{color:#6e7681;padding-left:11px;border-left:1px solid #222b36;margin:3px 0 3px 2px}
+.msrc .on{color:#26a69a;margin-right:3px}
+.msrc .off{color:#6e7681;margin-left:8px}
+.rkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.rkcell{background:#0f141b;border:1px solid #222b36;border-radius:9px;padding:9px 11px}
+.rkcell .k{font-size:10.5px;color:#7d8794;margin-bottom:3px}
+.rkcell .v{font-size:20px;font-weight:700;color:#e6edf3;font-variant-numeric:tabular-nums;line-height:1.15}
+.rkcell .s{font-size:10.5px;color:#8b949e;margin-top:2px}
+.rknote{font-size:11px;color:#a9b4c0;line-height:1.85;border-left:2px solid #30363d;padding:2px 0 2px 10px;margin-bottom:11px}
+@media(max-width:760px){.rkgrid{grid-template-columns:1fr 1fr}.rkgrid .rkcell:nth-child(3){grid-column:1/-1}}
+@media(max-width:760px){.mgrid{grid-template-columns:1fr}}
+
+@media(max-width:520px){
+  table.fxt{font-size:10.5px;min-width:0}
+  .szt{font-size:10.5px;table-layout:fixed;width:100%}
+  .szt th,.szt td{padding:5px 3px;white-space:normal;word-break:break-word}
+  .szt th:nth-child(4),.szt td:nth-child(4){display:none}
+  .szt th:first-child,.szt td:first-child{width:46%}
+  .szt tr.sub td:first-child{padding-left:10px}
+  .szt tr.sub td:nth-child(3){display:none}
+  .szchip{margin:0 4px 5px 0;font-size:10px;padding:2px 7px}
+  #sizebox{overflow-x:auto}
+  table.fxt th,table.fxt td{padding:5px 4px}
+  .alertbar .ab-right button{white-space:nowrap}
+  .alertbar{font-size:11.5px}
+}
+
 .chartbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 10px 6px;margin-bottom:12px}
 .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px;flex-wrap:wrap;gap:8px}
 .btns{display:flex;gap:6px}
@@ -227,6 +627,21 @@ table.sig tr.cur{background:rgba(201,162,39,.06)}
 .dcard.darkred{border-color:#8b1a1a;background:rgba(185,28,28,.14);animation:pulseDark 1.1s infinite}
 .dcard.darkred .dv{color:#ff5b55}
 @keyframes pulseOrange{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 0 4px rgba(245,158,11,.14)}}
+.verline{display:flex;align-items:flex-start;gap:7px;margin:4px 0 15px;font-size:11px;color:#79838f;line-height:1.7}
+.verline .vd{width:6px;height:6px;border-radius:50%;background:#26a69a;margin-top:5px;flex:0 0 6px}
+.verline.ok .vd{background:#26a69a}
+.verline.warn{color:#c9a227}
+.verline.warn .vd{background:#e8c35a;box-shadow:0 0 7px rgba(232,195,90,.6)}
+.verline.fail{color:#f0524d}
+.verline.fail .vd{background:#f0524d;box-shadow:0 0 9px #f0524d;animation:blink 1.1s infinite}
+.verline b{color:#c8d1da;font-weight:600}
+.verline .vmore{color:#6e7681;cursor:pointer;border-bottom:1px dotted #3a424d;margin-left:2px}
+.verline .vmore:hover{color:#8b949e}
+.verline .vdet{display:none;margin-top:5px;font-size:10.5px;color:#7d8794}
+.verline.open .vdet{display:block}
+.verline .vdet div{padding:1.5px 0}
+.verline .vdet .x{color:#f0524d}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .alertbar.orange{background:linear-gradient(90deg,rgba(245,158,11,.22),rgba(245,158,11,.05));border-color:#8a5a1a;color:#fbbf24;animation:pulseOrange 1.2s infinite}
 .alertbar.orange .abdot{background:#f59e0b;box-shadow:0 0 10px #f59e0b}
 .alertbar.orange .ab-left{font-size:18px}
@@ -385,6 +800,8 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     </div>
   </div>
 
+  <div id="verline" class="verline"></div>
+
   <div id="alertmask">
     <div id="alertmodal">
       <div id="amtitle"></div>
@@ -408,13 +825,116 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     <span id="liveflag" style="color:#6e7681">● 构建快照</span> <button id="btnrefresh" style="background:#1c232d;color:#9aa4b2;border:1px solid #2b3440;border-radius:4px;padding:2px 8px;font-size:10.5px;cursor:pointer">手动刷新</button>
   </div>
 
+  <div class="refbar" id="refbar"></div>
+
   <div class="grid">
     <div class="card"><div class="k">近 60 日区间位置</div><div class="v" id="d1">--</div><div class="s" id="s1">--</div></div>
     <div class="card"><div class="k">偏离 MA10（止盈线口径）</div><div class="v" id="d2">--</div><div class="s" id="s2">--</div></div>
     <div class="card"><div class="k">MACD（12,26,9）</div><div class="v" id="macdv">--</div><div class="s" id="macds">--</div></div>
     <div class="card"><div class="k">量能 · 沪金主力 AU0</div><div class="v" id="volv">--</div><div class="s" id="vols">--</div></div>
     <div class="card"><div class="k">当前交易时段</div><div class="v" id="sess">--</div><div class="s" id="sesss">--</div></div>
+    <div class="card"><div class="k">波动率环境 · 60 日均振幅</div><div class="v" id="ampv">--</div><div class="s" id="amps">--</div></div>
+    <div class="card"><div class="k">偏离 MA200 · 下跌空间</div><div class="v" id="m2v">--</div><div class="s" id="m2s">--</div></div>
+    <div class="card" style="border-color:#3a3220"><div class="k">人民币金价 · 元/克</div><div class="v" id="cnyv">--</div><div class="s" id="cnys">--</div></div>
   </div>
+
+  <div class="chartbox" style="padding:14px 15px 12px">
+    <div class="bar">
+      <div style="font-size:13px;color:#c9d1d9">人民币视角 · 你实际拿到手的那个数</div>
+      <div style="font-size:11px;color:#6e7681">美元金价 ÷ 31.1035 × USD/CNY · 汇率是第二个价格</div>
+    </div>
+    <div id="fxwrap"></div>
+  </div>
+
+  <div class="chartbox" style="padding:14px 15px 14px">
+    <div class="bar">
+      <div style="font-size:13px;color:#c9d1d9">宏观环境 · 黄金的机会成本</div>
+      <div style="font-size:11px;color:#6e7681">美国 10 年期 TIPS 实际利率 · 只解释逆风来自哪，不告诉你什么时候转</div>
+    </div>
+    <div id="macrowrap"></div>
+  </div>
+
+  <div class="chartbox" style="padding:14px 15px 14px;border-color:#4a3d1c;background:linear-gradient(180deg,#141109,#0d1117)">
+    <div class="bar" style="margin-bottom:10px">
+      <div style="font-size:13px;color:#e8c35a">决策纪律 · 信号是用来否决的，不是用来等的</div>
+      <div style="font-size:11px;color:#6e7681">写在这里，是因为这一条比任何指标都更容易让你亏钱</div>
+    </div>
+
+    <div style="font-size:12px;color:#c9d1d9;line-height:1.9;margin-bottom:10px">
+      这个页面现在有 <b style="color:#e8c35a">14 个信号</b>。它们的排列方式是<b>并列</b>的，你的用法却常常是<b>串联</b>的 ——
+      跌了想等黄灯，黄灯亮了想等振幅变高，振幅高了想等 MA60 收复。<br>
+      每一环单看都合理，合起来就是<b style="color:#f0524d">永远不动</b>。而这根链条的三个环，其实都有明确标价：
+    </div>
+
+    <div class="wt" style="margin-bottom:11px">
+      <div class="wtr"><div class="wtc a">振幅变高</div>
+        <div class="wtc b"><b style="color:#26a69a">已经兑现</b>：60 日均振幅 2.05%，历史 83% 分位，属于高波动档</div>
+        <div class="wtc c">它<b>不是触发条件</b>，只是注释。所以它兑现了也不会让你动 —— 这类条件永远可以被下一个条件替代</div></div>
+      <div class="wtr"><div class="wtc a">MA60 收复</div>
+        <div class="wtc b">MA60 在 4291，要价格自己先涨 <b>+6.7%</b> 上来</div>
+        <div class="wtc c">历史深跌样本（偏离 MA200 ≤-10%，19 次）18 次最终收复 MA200，<b>中位 56 个交易日</b> ≈ 2.7 个月</div></div>
+      <div class="wtr"><div class="wtc a">黄灯确认</div>
+        <div class="wtc b">10-28 磨底刚到 2/4，<b style="color:#f0524d">10-29 一根阴线掉回 1/4</b> —— 亮两天就灭</div>
+        <div class="wtc c">「确认」本身需要 3 天，3 天里价格可以再跌 3% —— 你等的是一个<b>用时间换不确定</b>的东西</div></div>
+    </div>
+
+    <div style="font-size:12px;color:#c9d1d9;line-height:1.9;margin-bottom:11px">
+      <b style="color:#e8c35a">两条硬规则：</b><br>
+      <b>① 信号只能否决，不能授权等待。</b>任何一盏卖出灯亮起 → 必须减；但反过来，<b>没有任何一盏灯亮着的时候，你也没有权力因为「还没等到 X」而推迟一个已经写好的动作</b>。<br>
+      <b>② 动作必须提前写死金额和价位。</b>「减一点」不是决策，是拖延；「跌到 3943 买 100 万」才是。
+    </div>
+
+    <div style="font-size:12px;color:#c9d1d9;line-height:1.9;margin-bottom:2px">
+      <b style="color:#e8c35a">解药：把「等一个舒服的信号」换成「三张全覆盖的委托单」。</b>
+      三种走势各对应一张，不管它跌、横、还是转强，你都有事可做 —— 这样就不存在「等不到」这件事。
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:9px 0 2px;font-size:11px;color:#8b949e">
+      <label>总金额（元）<input id="t-amt" type="number" value="3000000" step="10000" style="width:120px;background:#0d1117;border:1px solid #2b3440;color:#e6edf3;border-radius:5px;padding:4px 7px;margin-left:5px;font-size:11px"></label>
+      <label>汇率<input id="t-fx" type="number" value="6.66" step="0.01" style="width:78px;background:#0d1117;border:1px solid #2b3440;color:#e6edf3;border-radius:5px;padding:4px 7px;margin-left:5px;font-size:11px"></label>
+      <span id="t-sum" style="color:#7d8594"></span>
+    </div>
+    <div class="tran" id="tranbox"></div>
+
+    <div style="font-size:11.5px;color:#9aa4b2;line-height:1.9">
+      <b style="color:#e8c35a">第 1 档今天就执行</b>，它是唯一无条件的一档 —— 位置已在 -28%，越过历次中级调整的中位（-25%），这一步不需要再等任何确认。<br>
+      <b style="color:#f0524d">第 1 档没执行完，第 2 / 3 档的钱不许动</b>；三档之间不许挪用额度；执行后 <b>30 天内不许改比例</b>。<br>
+      <b style="color:#e8c35a">第 2 档的触发价是锁死的：<span id="rl-num">3943.65</span></b>（2026-06-30 低点，见页面顶部那条进度条）。
+      不取「每天重算的 250 日最低价」—— 那个数会跟着下跌自己往下爬，真破了也显示「还没破」，规则等于不存在。
+      这条线一经锁定，只有跌破 <b>3500</b>（下面那条推翻条件）才算失效。<br>
+      <b style="color:#8b949e">推翻条件</b>：跌破 <b style="color:#f0524d">3500</b>（自高点 -37.5%，接近 1992 年以来最深调整 -38.6%）→ 这不是中级调整而是结构性熊市，<b>三档全部作废，停止加仓，重新评估</b>。
+    </div>
+
+    <div style="margin-top:18px;border-top:1px solid #1e252f;padding-top:14px">
+      <div style="font-size:12.5px;font-weight:600;color:#e6edf3;margin-bottom:5px">上一层的问题：这 300 万，占你家多少</div>
+      <div style="font-size:11.5px;color:#9aa4b2;line-height:1.85;margin-bottom:10px">
+        三档解决「什么时候买」，总量解决「买多少不伤身」。黄金不产生现金流、不分红、没有利息，它的仓位决定的不是收益，
+        而是<b style="color:#e6edf3">在最深那一段回撤里，你的账户疼多少、会不会被迫卖掉别的东西</b>。
+        百分比这件事没有体感，所以下面把每个百分比都折成「几年的储蓄」。
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:9px;font-size:11px;color:#8b949e">
+        <label>可投资金融资产（不含自住房）<input id="s-asset" type="number" value="10000000" step="500000" style="width:118px;background:#0d1117;border:1px solid #2b3440;color:#e6edf3;border-radius:5px;padding:4px 7px;margin-left:5px;font-size:11px"></label>
+        <label>现有黄金市值<input id="s-hold" type="number" value="0" step="100000" style="width:100px;background:#0d1117;border:1px solid #2b3440;color:#e6edf3;border-radius:5px;padding:4px 7px;margin-left:5px;font-size:11px"></label>
+        <label>年可储蓄额<input id="s-save" type="number" value="500000" step="50000" style="width:100px;background:#0d1117;border:1px solid #2b3440;color:#e6edf3;border-radius:5px;padding:4px 7px;margin-left:5px;font-size:11px"></label>
+        <span style="color:#5a6371;font-size:10.5px">默认是假设值，改成你的真实数字（本机记住）</span>
+      </div>
+      <div id="sizebox"></div>
+      <div id="sizeconcl" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <details class="qref" open>
+    <summary>信号速查 · 每个灯是什么意思、该做什么、历史上准不准（点此收起）</summary>
+    <div class="qwrap"><table class="qtab">
+      <thead><tr>
+        <th style="width:15%">灯 / 信号</th>
+        <th style="width:27%">它说明什么</th>
+        <th style="width:27%">该做什么</th>
+        <th style="width:23%">历史依据</th>
+        <th style="width:8%">现在</th>
+      </tr></thead>
+      <tbody id="qbody"><tr><td colspan="5" style="color:#6e7681">加载中…</td></tr></tbody>
+    </table></div>
+  </details>
 
   <div class="chartbox">
     <div class="bar">
@@ -917,6 +1437,42 @@ function paintHeader(){
   const s = sessionNow();
   document.getElementById('sess').textContent = s.name;
   document.getElementById('sesss').textContent = '北京时间 ' + s.hhmm + ' · ' + s.desc;
+
+  renderRefLow();
+}
+
+// 参照低点进度条：第 2 档的触发线距离多远，用实时价算，不用收盘价
+function renderRefLow(){
+  const E = DATA.fxenv || {}, box = document.getElementById('refbar');
+  if(!box) return;
+  const R = E.refLow || {};
+  const low = R.usd || null;
+  if(!low){ box.innerHTML = ''; box.className = 'refbar'; return; }
+  const _num = document.getElementById('rl-num');
+  if(_num) _num.textContent = low.toFixed(2);
+  const px = (live && live.price) || low;
+  const fx = E.fx || 6.6525;
+  const gap = (px/low - 1) * 100;
+  const cnyLow = low * fx / GRAM;
+  let cls = 'refbar', tag = '', tone = '#8b949e', sub = '';
+  if(gap > 3){
+    tag = '距参照低点'; sub = `还有 ${gap.toFixed(1)}% 空间 · 第 2 档未激活`;
+  } else if(gap > 0){
+    cls = 'refbar warn'; tag = '逼近参照低点'; tone = '#e8c35a';
+    sub = `只差 ${gap.toFixed(1)}% · 第 2 档待命（第 1 档未执行完不动）`;
+  } else {
+    cls = 'refbar broken'; tag = '已跌破参照低点'; tone = '#f0524d';
+    sub = `超出 ${Math.abs(gap).toFixed(1)}% · 第 2 档条件成立（第 1 档未执行完不动）`;
+  }
+  box.className = cls;
+  box.innerHTML =
+    `<span class="rb-t" style="color:${tone}">${tag}</span>` +
+    `<span class="rb-n" style="color:${tone}">${fmt(low, low % 1 ? 2 : 0)}</span>` +
+    `<span style="color:#5a6371">${R.d ? R.d + ' 低点 · 已锁死，不随 250 日窗口滑动' : '已锁死'}</span>` +
+    `<span style="color:#4a5563">|</span>` +
+    `<span>折 ${cnyLow.toFixed(1)} 元/克</span>` +
+    `<span style="color:#5a6371">·</span>` +
+    `<span>${sub}</span>`;
 }
 
 function prep(cv, H){
@@ -1116,6 +1672,11 @@ function renderSignals(){
 function renderMatrix(){
   const SIG = DATA.signals || [];
   const box = document.getElementById('mtx');
+  // 保护：signals.json 缺失/为空时不能让整个页面 JS 崩掉（2026-10-30）
+  if(!SIG.length){
+    box.innerHTML = '<div style="color:#6e7681;font-size:12px;padding:10px;border:1px dashed #2b3440;border-radius:6px">信号数据未生成（signals.json 缺失），其余模块不受影响</div>';
+    return;
+  }
   const rows = SIG.map((s,ix)=>{
     const cur = s.date === bars[bars.length-1].d;
     const A = s.lower_share >= 25;
@@ -1553,6 +2114,339 @@ function renderDefense(){
       <div class="dd">收盘 ${fmt(M.close)} · MA60 ${fmt(M.ma60)} · ${M.gap60>0?'+':''}${M.gap60}%<br>${d2a}<br><span style="color:#5a6371">环境 ${M.env||'--'} · 距250日高 ${M.pos250!=null?M.pos250+'%':'--'}${M.dd8?' · <span style="color:#f0524d">已破 8% 回撤线第 '+M.dd8_days+' 日</span>':' · 8% 回撤线未破'}</span></div></div></div>`;
 }
 
+function fillVolEnv(){
+  const V=DATA.volenv||{}; const v=document.getElementById('ampv'), s=document.getElementById('amps');
+  if(!v||!s) return;
+  if(V.amp==null){ v.textContent='--'; s.textContent='数据不足'; return; }
+  const col = V.grade==='low'?'#e8c35a':(V.grade==='mid'?'#8b949e':'#58a6ff');
+  const lbl = V.grade==='low'?'低波动 · 信号打折':(V.grade==='mid'?'中性 · 信号中等':'高波动 · 信号可信');
+  v.innerHTML = `<span style="color:${col}">${V.amp.toFixed(2)}%</span>`;
+  s.innerHTML = `<span style="color:${col}">${lbl}</span>` +
+    (V.pct!=null?`<br>历史 ${V.pct}% 分位 · 中位 ${V.med}%`:`<br><span style="font-size:9.5px;color:#5a6371">分位待累积（样本 ${V.n||0} 天）</span>`);
+}
+
+function renderMacro(){
+  const W=document.getElementById('macrowrap'); if(!W) return;
+  const M=DATA.macroenv||{}, G=DATA.gld||{};
+  if(!M.r){
+    W.innerHTML='<div style="font-size:11.5px;color:#6e7681;padding:6px 0">实际利率数据未就绪（macro_hist.json 缺失）</div>'; return;
+  }
+  const rp=M.pct, hi=p=>p>=95, lo=p=>p<=5;
+  const col = hi(rp)?'#f0524d':(rp>=75?'#e8c35a':(lo(rp)?'#26a69a':'#c9d1d9'));
+  const bp=v=>(v>0?'+':'')+v+'bp';
+  const bpc=v=>v>0?'#f0524d':(v<0?'#26a69a':'#8b949e');
+
+  const cells=[
+    {n:'金价见顶那天', a:M.peakR.toFixed(2)+'%', b:'→ '+M.r.toFixed(2)+'%',
+     c:`<b style="color:${bpc(M.sincePeakBp)}">${bp(M.sincePeakBp)}</b> · 同期金价 ${M.sincePeakPx}%`,
+     d:`${M.peakDate} 金价 ${M.peakPx} 美元时，利率只有 ${M.peakR.toFixed(2)}%。现在高出 ${Math.abs(M.sincePeakBp)}bp —— <b>这是这轮下跌真实的宏观推力</b>，不是纯技术回调。`},
+    {n:'利率自己的高点', a:M.max.toFixed(2)+'%', b:'→ '+M.r.toFixed(2)+'%',
+     c:`<b style="color:${bpc(M.rSinceTopBp)}">${bp(M.rSinceTopBp)}</b> · 同期金价 ${M.pxSinceTop}%`,
+     d:`${M.maxDate} 利率见顶 ${M.max.toFixed(2)}%，之后回落 ${Math.abs(M.rSinceTopBp)}bp，<b>但金价同期又跌了 ${Math.abs(M.pxSinceTop)}%</b> —— 最近这段卖压已经不是利率驱动。`},
+    {n:'极值程度', a:M.pct+'%', b:'分位',
+     c:`17 年里高于 2.5% 的交易日只占 <b>${M.hiShare}%</b>`,
+     d:`2010 年以来 ${M.n} 个交易日，区间 ${M.min}% ~ ${M.max}%。<b>现在的实际利率处在 17 年最高的一小撮里</b> —— 顺风谈不上，先看逆风什么时候停。`},
+  ];
+
+  // 风险温度：只回答「恐慌有多强、是不是黄金专属」，不产生信号
+  const K=DATA.riskenv||{};
+  let RK='';
+  if(K.gvz!=null){
+    const rc=v=>v>=80?'#f0524d':(v>=60?'#e8c35a':(v<=20?'#26a69a':'#c9d1d9'));
+    const dlt=(v,u)=>`${v>0?'+':''}${v.toFixed(1)}${u}`;
+    const goldOnly=K.goldOnly, isGoldOnly=K.ratio>1.3;
+    RK=`<div class="rkgrid">
+      <div class="rkcell"><div class="k">VIX · 股市恐慌</div>
+        <div class="v" style="color:${rc(K.vixPct)}">${K.vix.toFixed(1)}</div>
+        <div class="s">${K.vixPct}% 分位 · 20日 ${dlt(K.vix20,'')}</div></div>
+      <div class="rkcell"><div class="k">GVZ · 黄金恐慌</div>
+        <div class="v" style="color:${rc(K.gvzPct)}">${K.gvz.toFixed(1)}</div>
+        <div class="s">${K.gvzPct}% 分位 · 20日 ${dlt(K.gvz20,'')}</div></div>
+      <div class="rkcell"><div class="k">GVZ ÷ VIX · 谁更慌</div>
+        <div class="v">${K.ratio.toFixed(2)}</div>
+        <div class="s">${isGoldOnly?`<b style="color:#e8c35a">黄金更慌</b>`:'两者相当'} · 20日前 ${K.ratio20.toFixed(2)}</div></div>
+    </div>
+    <div class="rknote">${K.gvzPct>=75&&K.vixPct<60
+      ? `<b style="color:#e8c35a">这轮下跌是黄金专属的，不是全市场风险事件</b>：股市恐慌只在中位（${K.vixPct}% 分位），黄金自己的恐慌却在 ${K.gvzPct}% 分位。所以「乱世买金」的逻辑这次没有兑现 —— <b>因为没有乱世</b>。真正在卖的是黄金自己的持仓，不是避险资金在涌入。`
+      : (K.gvzPct>=75&&K.vixPct>=75
+        ? `<b style="color:#f0524d">全市场在慌</b>：股市 ${K.vixPct}%、黄金 ${K.gvzPct}% 分位同时偏高，这是系统性风险释放。历史上这种状态的后续收益同样不优于基准，但波动会更大。`
+        : `恐慌程度不高（VIX ${K.vixPct}%、GVZ ${K.gvzPct}% 分位）。${isGoldOnly?'黄金相对股市更慌，但绝对水平都不极端。':'两个市场都在常态区间。'}`)}
+      <span style="color:#6e7681">「黄金比股市更慌」这种状态，历史上只占 <b>${goldOnly}%</b> 的交易日（${K.n} 日样本）。</span></div>`;
+  }
+
+  W.innerHTML=`
+  <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:11px">
+    <div><div style="font-size:10.5px;color:#7d8594;margin-bottom:2px">10Y TIPS 实际利率</div>
+      <div style="font-size:31px;font-weight:700;color:${col};line-height:1.05;font-variant-numeric:tabular-nums">${M.r.toFixed(2)}<span style="font-size:16px">%</span></div></div>
+    <div style="font-size:11px;color:#8b949e;line-height:1.8;padding-bottom:3px">
+      2010 以来 <b style="color:${col}">${M.pct}% 分位</b> · 区间 ${M.min}% ~ ${M.max}%<br>
+      60 日 <b style="color:${bpc(M.d60)}">${bp(M.d60)}</b> ｜ 250 日 <b style="color:${bpc(M.d250)}">${bp(M.d250)}</b> —— ${M.d250>0?'钱在变贵，逆风在加强':'逆风在减弱'}
+    </div>
+  </div>
+  <div class="mgrid">${cells.map(c=>`<div class="mcell"><div class="k">${c.n}</div>
+    <div class="v">${c.a} <span style="font-size:11px;color:#7d8794;font-weight:400">${c.b}</span></div>
+    <div class="s">${c.c}</div><div class="d">${c.d}</div></div>`).join('')}</div>
+
+  ${RK}
+
+  <div class="whybox">
+    <div style="font-size:11.5px;color:#c9d1d9;margin-bottom:5px"><b style="color:#e8c35a">为什么它不做成买卖信号</b></div>
+    <div style="font-size:11px;color:#8b949e;line-height:1.9">
+      17 年实测：利率 60 日变化与金价未来 60 日收益的相关只有 <b>−0.03</b>（几乎为零）。
+      按利率分档统计金价未来一年收益，甚至会得出「利率越高、金价越涨」的反向结论 ——
+      因为 2–3% 那一档的样本几乎全部来自 2023 年以后的一段行情，它不是一个有 269 个独立观测的样本，
+      只是<b>一段行情的 269 天</b>。时间序列上做分箱，本质是伪样本 —— 和磨底雷达在 1992–1998 失效是同一类错误。<br>
+      <b style="color:#c9d1d9">所以它的正确用法只有两个</b>：① 知道逆风有多强（现在：17 年 99% 分位，很强）；
+      ② 盯背离 —— 利率回落而金价继续跌，说明卖压另有来源，那才是需要重新判断的时候。
+    </div>
+    <div style="height:1px;background:#222b36;margin:9px 0"></div>
+    <div style="font-size:11.5px;color:#c9d1d9;margin-bottom:5px"><b style="color:#e8c35a">上面那三个恐慌读数，也测过，同样不做信号</b></div>
+    <div style="font-size:11px;color:#8b949e;line-height:1.9">
+      <b style="color:#c9d1d9">① VIX 分档没有单调关系</b>：VIX &lt;14 时后 20 日胜率 <b>49%</b>、14–20 时 <b>54%</b>、20–30 时 <b>62%</b>、&gt;30 时 <b>54%</b> —— 基准 55%。
+      最该出结论的「VIX &gt;30 恐慌」反而和基准一样，中间那档最高，这只能是噪声。<br>
+      <b style="color:#c9d1d9">② GVZ &gt;30 那 126 天，拆开只有 9 段</b>：按日算 T+60 胜率 28%（看起来极强），<b>按段算 56%</b>，和基准 60% 没差别。
+      28% 是 9 段里 3 段跌出来的（2022-03 −10%、2026-01 −3%、2013-04 −8%），不是 126 个独立样本 —— <b>和利率分档、1992–1998 磨底失效是同一个坑，这是第四次</b>。<br>
+      <b style="color:#c9d1d9">③ GVZ÷VIX 阈值不稳健</b>：k 从 1.10 挨个测到 1.60，胜率 <b>41 / 50 / 54 / 44 / 30 / 42 / 40 / 55 / 54</b>。
+      1.30 刚好是中间那个低点，往上挪 0.05 就变成 42%，挪到 1.50 又变 55%。<b>能靠挪阈值消失的规律，不叫规律。</b><br>
+      <span style="color:#c9d1d9">所以这三个数只回答一件事</span>：<b>恐慌有多强、是不是黄金专属</b>。它解释「为什么这次避险买金没兑现」，不告诉你「什么时候会兑现」。
+    </div>
+  </div>
+
+  <div class="msrc">
+    <div><span class="on">✓ 实际利率</span>美财政部 TIPS 日频 · ${M.from} 起 ${M.n} 个交易日</div>
+    <div><span class="on">✓ ETF 流向</span>GLD ${G.tonnes?G.tonnes+' 吨':'—'} · 20 日 ${G.chg20>0?'+':''}${G.chg20||'—'} 吨</div>
+    <div><span class="on">✓ 风险温度</span>CBOE VIX ${K.vixMin||''}–${K.vixMax||''} / GVZ ${K.gvzMin||''}–${K.gvzMax||''} · ${K.n||'—'} 个交易日</div>
+    <div class="cx"><span class="off">✗ 央行购金</span>数据拿到了（IMF IFS 官方储备实物量，中/俄/印/世界，1950 起 829 个月），<b>但实测没用</b>：中国 53 个「净买入月」拆开只有 <b>11 个独立买入段</b>，6 个月后胜率 <b>67%，低于</b>基准 71%；世界总储备<b>净减持</b>后 12 个月胜率 78%，比净买入还高 —— 方向都不对。加上免费源滞后 16 个月，<b>不进页面</b>。</div>
+    <div class="cx"><span class="off">✗ 地缘指数</span>GPR 站点在本环境完全不可达；改用 VIX/GVZ 做代理已接（见上），<b>但只能做背景</b>。这一项到此为止，不再找源。</div>
+  </div>`;
+}
+
+function renderSizing(){
+  const g=id=>document.getElementById(id);
+  const box=g('sizebox'), con=g('sizeconcl'); if(!box) return;
+  const asset=Math.max(+((g('s-asset')||{}).value)||0,0);
+  const hold=Math.max(+((g('s-hold')||{}).value)||0,0);
+  const save=Math.max(+((g('s-save')||{}).value)||0,0);
+  const plan=Math.max(+((g('t-amt')||{}).value)||0,0);
+  if(!asset){
+    box.innerHTML='<div style="font-size:11.5px;color:#6e7681;padding:9px 0">填入「可投资金融资产」总额后开始计算。</div>';
+    con.innerHTML=''; return;
+  }
+  const after=hold+plan, pA=after/asset*100;
+  const W=v=>v>=10000?(v/10000).toFixed(v>=100000?0:1)+' 万':Math.round(v)+' 元';
+  const P=v=>(v/asset*100).toFixed(1)+'%';
+  const Y=v=>save>0?(v/save).toFixed(1)+' 年储蓄':(v>=10000?(v/10000).toFixed(0)+' 万':v+' 元');
+  const loss25=after*0.25, loss386=after*0.386;
+  const cap15=asset*0.15, cap20=asset*0.20;
+
+  const chips=[[5,'#26a69a'],[10,'#58a6ff'],[15,'#e8c35a'],[20,'#f0524d']].map(([p])=>{
+    const on=(pA>=p-2.5&&pA<p+2.5), hi=(p===20&&pA>20);
+    return `<span class="szchip ${on?'on':''} ${hi?'hi':''}">${p}% = ${W(asset*p/100)}</span>`;
+  }).join('');
+
+  box.innerHTML=`<table class="szt">
+    <thead><tr><th>层级</th><th>金额</th><th>占可投资资产</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>家庭可投资金融资产</td><td>${W(asset)}</td><td>100%</td><td style="color:#5a6371">分母</td></tr>
+      <tr><td>现有黄金（含积存金）</td><td>${W(hold)}</td><td>${P(hold)}</td><td style="color:#5a6371">已经在里面了</td></tr>
+      <tr><td>本次三档计划投入</td><td>${W(plan)}</td><td>${P(plan)}</td><td style="color:#5a6371">分三次付</td></tr>
+      <tr class="key"><td>执行后黄金合计</td><td>${W(after)}</td><td>${P(after)}</td><td>这是真正要回答的数</td></tr>
+      <tr class="sub"><td>└ 若金价再跌 25%（历次中级调整中位）</td><td style="color:#26a69a">-${W(loss25)}</td><td style="color:#26a69a">-${P(loss25)}</td><td>≈ ${Y(loss25)}</td></tr>
+      <tr class="sub"><td>└ 若跌 38.6%（1992 以来最深）</td><td style="color:#26a69a">-${W(loss386)}</td><td style="color:#26a69a">-${P(loss386)}</td><td>≈ ${Y(loss386)}</td></tr>
+    </tbody></table>
+    <div style="margin-top:8px">${chips}</div>`;
+
+  let lv, col, msg;
+  if(pA>20){
+    lv='过重'; col='#f0524d';
+    msg=`黄金占总资产 <b>${pA.toFixed(1)}%</b>，属于集中押注。把三档压到 15%（${W(cap15)}）需要减少 <b>${W(after-cap15)}</b>；
+         压到 20%（${W(cap20)}）需要减少 ${W(after-cap20)}。再跌 25% 那一下，损失约等于 <b>${Y(loss25)}</b>。`;
+  }else if(pA>=15){
+    lv='偏重'; col='#e8c35a';
+    msg=`黄金占总资产 <b>${pA.toFixed(1)}%</b>，偏重但不算失控。能接受的前提是：再跌 25% 亏 ${W(loss25)}（${Y(loss25)}）不会让你被迫卖掉别的资产。
+         如果这个数让你犹豫，就把计划砍到 ${W(cap15)}。`;
+  }else if(pA>=5){
+    lv='在常见区间'; col='#26a69a';
+    msg=`黄金占总资产 <b>${pA.toFixed(1)}%</b>，落在 5–15% 的常见区间内。这个仓位的特点是：涨了有感受，跌了不影响主线，
+         属于「不需要每天盯着」的量。再跌 25% 的账户影响是 ${P(loss25)}（${W(loss25)}）。`;
+  }else{
+    lv='偏轻'; col='#8b949e';
+    msg=`黄金占总资产 <b>${pA.toFixed(1)}%</b>，对组合的影响有限 —— 它的作用是分散，不是改变结果。若想让它有实际作用，
+         15% 对应 ${W(cap15)}。`;
+  }
+  con.innerHTML=`<div class="szc" style="border-color:${col}"><b style="color:${col}">${lv}</b> —— ${msg}<br>
+    <span style="color:#6e7681">这段是算术，不是建议：它只回答「这个数在你家账本上意味着什么」，不回答「金价会涨还是会跌」——后者这个系统做不到。</span></div>`;
+}
+
+function fillVerify(){
+  const box=document.getElementById('verline'); if(!box) return;
+  const V=DATA.validation||{};
+  if(!V.status){ box.className='verline'; box.innerHTML='<span class="vd"></span><span>数据自检无记录（validation.json 未生成）</span>'; return; }
+  const n=(V.checks||[]).length, bad=(V.fails||[]).length, wr=(V.warns||[]).length;
+  const det=(V.checks||[]).map(c=>`<div class="${c.ok?'':'x'}">${c.ok?'✓':'✗'} ${c.n} · ${c.d}</div>`).join('');
+  let head='';
+  if(V.status==='fail'){
+    head=`<b>数据自检未通过（${bad} 项）</b> · `+
+         (V.rolledBack?`已回滚到 <b>${V.date||'上一份'}</b> 的收盘`:(V.dropped?`已丢弃可疑K线 <b>${V.dropped}</b>`:`无备份可回滚`))+
+         ` — 本页与推送<b>用的不是今天的行情</b>，先看日志再动手。`;
+  }else if(V.status==='warn'){
+    head=`数据自检 ${wr} 项预警 · ${n} 项通过 · 截至 <b>${V.date||'-'}</b> 收 ${V.close||'-'}`;
+  }else{
+    head=`数据自检通过 · ${n} 项 · 截至 <b>${V.date||'-'}</b> 收 ${V.close||'-'}`;
+  }
+  box.className='verline '+(V.status==='fail'?'fail':(V.status==='warn'?'warn':'ok'));
+  box.innerHTML=`<span class="vd"></span><span>${head}<span class="vmore" id="vmore">明细</span><div class="vdet">${det}</div></span>`;
+  const m=document.getElementById('vmore');
+  if(m) m.onclick=()=>{ box.classList.toggle('open'); m.textContent=box.classList.contains('open')?'收起':'明细'; };
+}
+
+function fillMA200(){
+  const E=DATA.ma200env||{}; const v=document.getElementById('m2v'), s=document.getElementById('m2s');
+  if(!v||!s) return;
+  if(E.dev==null){ v.textContent='--'; s.textContent='数据不足'; return; }
+  const d=E.dev;
+  let col,lbl;
+  if(d<=-15){ col='#f0524d'; lbl='极端低位 · 接近历史极限'; }
+  else if(d<=-8){ col='#e8c35a'; lbl='深度低位 · 下方空间有限'; }
+  else if(d<=8){ col='#8b949e'; lbl='正常区间'; }
+  else { col='#f0524d'; lbl='偏高 · 追高风险'; }
+  v.innerHTML = `<span style="color:${col}">${d>0?'+':''}${d.toFixed(1)}%</span>`;
+  let extra='';
+  if(E.slope!=null) extra += `<br>MA200 ${E.ma200} · ${E.slope>=0?'上行 +':'下行 '}${E.slope.toFixed(2)}%`;
+  if(E.p15!=null) extra += `<br>到 -15% 偏离：${E.p15.toFixed(1)}%`;
+  s.innerHTML = `<span style="color:${col}">${lbl}</span>` +
+    (E.pct!=null?`<br>历史 ${E.pct}% 分位${E.min!=null?` · 极值 ${E.min}%`:''}`:'') + extra;
+}
+
+// ---------- 人民币视角（2026-10-30） ----------
+const GRAM=31.1035;
+function pcol(x){ return x>=0?'#f0524d':'#26a69a'; }   // 涨红跌绿，全页统一
+function psign(x,d=2){ return (x>0?'+':'')+Number(x).toFixed(d); }
+
+function fillFX(){
+  const E=DATA.fxenv||{}, W=document.getElementById('fxwrap');
+  const cv=document.getElementById('cnyv'), cs=document.getElementById('cnys');
+  if(!W) return;
+  if(E.cny==null){
+    if(cv) cv.textContent='--';
+    if(cs) cs.textContent='汇率数据未就绪';
+    W.innerHTML='<div style="font-size:11.5px;color:#6e7681">汇率历史未加载，元/克换算不可用。检查 fx_hist.json。</div>';
+    return;
+  }
+  // 主值走实时价，副值回落到收盘口径 —— 两个口径同时给出，避免"页面价变了卡片没变"
+  const pxNow=(live&&live.price)?live.price:((DATA.trend||{}).close||0);
+  const fxNow=(DATA.fx&&+DATA.fx)||E.fx;
+  const cnyNow=pxNow?pxNow*fxNow/GRAM:E.cny;
+  const isLive=!!(live&&live.price&&Math.abs(pxNow-((DATA.trend||{}).close||0))>0.01);
+  if(cv) cv.innerHTML=`<span style="color:#e8c35a">${fmt(cnyNow,1)}</span>`;
+  if(cs) cs.innerHTML=`元/克 · 汇率 ${fxNow}<br>${isLive?'实时':'收盘'} ${fmt(pxNow,1)} × ${fxNow} ÷ 31.1035`+
+    `<br><span style="color:#6e7681">收盘口径 ${fmt(E.cny,1)} · 距历史最高 ${psign(E.cnyDD,1)}%</span>`;
+
+  // 顶部四格
+  const hist=(E.rows||[]).find(r=>r.k.indexOf('250')===0)||{};
+  const drag250 = hist.drag!=null?hist.drag:null;
+  const st=[
+    {l:'人民币金价', v:fmt(cnyNow,1), u:'元/克', d:`${isLive?'实时':'收盘'} ${fmt(pxNow,1)} USD × ${fxNow} ÷ 31.1035<br>历史最高 ${E.cnyHi?fmt(E.cnyHi,1)+' 元/克':'-'} · 收盘口径 ${fmt(E.cny,1)}`},
+    {l:'USD/CNY', v:fxNow, u:'', d:`汇改后 ${E.pct}% 分位（收盘口径）<br>区间 ${E.min} – ${E.max}`,
+     c: (E.pct<=25?'#26a69a':(E.pct>=75?'#f0524d':'#8b949e'))},
+    {l:'汇率敏感度', v:fmt(E.sens,1), u:'元/克', d:`人民币每升值 1%<br>你的持仓被动 -${fmt(E.sens,1)} 元/克`},
+    {l:'近 250 日 汇率吃掉', v:(drag250!=null?fmt(Math.abs(drag250),1)+'pp':'-'), u:'',
+     d:(hist.usd!=null?`美元 ${psign(hist.usd,1)}% → 人民币 ${psign(hist.cny,1)}%<br>这一年汇率是逆风`:'-'),
+     c:'#26a69a'}
+  ];
+  let h='<div class="fxstat">'+st.map(x=>
+    `<div class="fxs"><div class="l">${x.l}</div>`+
+    `<div class="v"${x.c?` style="color:${x.c}"`:''}>${x.v}${x.u?`<span style="font-size:11px;font-weight:400;color:#7d8794;margin-left:3px">${x.u}</span>`:''}</div>`+
+    `<div class="d">${x.d}</div></div>`).join('')+'</div>';
+
+  // 区间分解
+  h+='<div class="tblwrap"><table class="fxt"><thead><tr>'+
+     '<th>区间</th><th>美元金价</th><th>USD/CNY</th><th>人民币金价</th><th>汇率贡献<br><span style="font-weight:400;font-size:10px;color:#5a6371">负 = 拖累</span></th></tr></thead><tbody>';
+  (E.rows||[]).forEach(r=>{
+    const isHi=r.k.indexOf('2026')===0;
+    h+=`<tr${isHi?' class="sum"':''}><td>${r.k}</td>`+
+       `<td style="color:${pcol(r.usd)}">${psign(r.usd)}%</td>`+
+       `<td style="color:${pcol(r.fx)}">${psign(r.fx)}%</td>`+
+       `<td style="color:${pcol(r.cny)}">${psign(r.cny)}%</td>`+
+       `<td style="color:${pcol(r.drag)}">${psign(r.drag,1)}pp</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+
+  // 关键价位 → 元/克
+  h+='<div style="font-size:11.5px;color:#8b949e;margin:11px 0 6px">同样的价位，换成你下单用的<b style="color:#c9d1d9">元/克</b>：</div>';
+  h+='<div class="fxstat" style="margin-bottom:0">'+(E.levels||[]).map(l=>
+    `<div class="fxs"><div class="l">${l.n} · ${fmt(l.usd,1)}</div>`+
+    `<div class="v" style="font-size:15px">${fmt(l.cny,1)}<span style="font-size:10px;font-weight:400;color:#7d8794;margin-left:3px">元/克</span></div>`+
+    `<div class="d" style="color:${pcol(l.gap)}">距现价 ${psign(l.gap,1)}%</div></div>`).join('')+'</div>';
+
+  W.innerHTML=h;
+}
+
+// ---------- 三档全覆盖委托（2026-10-30） ----------
+function renderTranche(){
+  const E=DATA.fxenv||{}, M=DATA.ma||{}, T=DATA.trend||{};
+  const box=document.getElementById('tranbox'); if(!box) return;
+  const amt=parseFloat((document.getElementById('t-amt')||{}).value)||0;
+  const fx=parseFloat((document.getElementById('t-fx')||{}).value)||E.fx||6.66;
+  const px=((live&&live.price)?live.price:(T.close||0));
+  let low=null, ma60=M.ma60;
+  (E.levels||[]).forEach(l=>{ if(l.n==='参照低点') low=l.usd; });
+  if(!px){
+    box.innerHTML='<div style="font-size:11.5px;color:#6e7681">价位数据未就绪（行情未载入）</div>'; return;
+  }
+  const defs=[
+    {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`就在今天，现价 ${fmt(px,0)} 直接买<br>不等任何确认`, note:'位置已在 -28%，越过历次中级调整中位'},
+    {n:'第 2 档 · 破前低', w:.30, usd:low, cls:'t2', cond:`收盘跌破 ${fmt(low,2)}<br>次日开盘买`, note:'前低破位 = 恐慌价，只买这一次；参照线已锁死，不随窗口滑动'},
+    {n:'第 3 档 · 收复趋势', w:.30, usd:ma60, cls:'t3', cond:`收盘站上 ${fmt(ma60,0)}<br>且 3 日不破再买`, note:'趋势确认，多付 6.7% 买确定性'}
+  ];
+  let g=0, cost=0;
+  const cards=defs.map(d=>{
+    if(!d.usd){
+      return `<div class="trc ${d.cls}" style="opacity:.55"><div class="n">${d.n}</div>`+
+        `<div class="a" style="font-size:15px">待数据</div>`+
+        `<div class="p">均线/前低缺失，本次跳过</div>`+
+        `<div class="c">${d.note}</div></div>`;
+    }
+    const money=amt*d.w, grams=money/(d.usd*fx/GRAM);
+    g+=grams; cost+=money;
+    return `<div class="trc ${d.cls}"><div class="n">${d.n}</div>`+
+      `<div class="a">${amt?fmt(money/10000,0)+' 万':'--'}<span style="font-size:10px;font-weight:400;color:#7d8794;margin-left:3px">${Math.round(d.w*100)}%</span></div>`+
+      `<div class="p">${fmt(d.usd*fx/GRAM,1)} 元/克 · ${amt?fmt(grams,1)+' 克':'-'}</div>`+
+      `<div class="c">${d.cond}<br><span style="color:#5a6371">${d.note}</span></div></div>`;
+  }).join('');
+  box.innerHTML=cards;
+  const sum=document.getElementById('t-sum');
+  if(sum) sum.innerHTML = (amt&&g)?`合计 <b style="color:#e6edf3">${fmt(g,1)} 克</b> · 平均成本 <b style="color:#e8c35a">${fmt(cost/g,1)} 元/克</b>`:'';
+}
+
+function renderQuickRef(){
+  const st=alertState(), V=DATA.volenv||{}, M=DATA.ma||{}, S=DATA.stop||{}, M2=DATA.ma200env||{}, F=DATA.fxenv||{}, MA=DATA.macroenv||{};
+  const dsc=(st.m&&st.m.day&&st.m.day.score)||0;
+  const lowV=V.grade==='low';
+  const R=[
+   ['磨底黄灯','低位（60 日位置 ≤20%）+ 动能衰竭 + 形态企稳；有量能时 3/4 亮，无量能时动能与形态必须同时成立','唯一正式买点：分批建仓，单笔不超过计划仓位的 1/3','1999–2026 共 69 次，T+20 均值 +1.78%、胜率 70%（随机 57%）', dsc>=3, dsc+'/4'],
+   ['暴跌雷达','单日大跌 + 放量，急跌进行中','只做 T 的参考，不是买点','历史 5 次里 3 次是下跌中继，接刀要快', !!st.crash, st.crash?'触发':'—'],
+   ['超买灯','超买 + 动量透支，不等于见顶','别追高、别加仓；卖出不看它','亮灯后 60 日跌 ≥8% 仅 9.0%，随机是 21.4%', (st.ts||0)>=3, (st.ts||0)+'/4'],
+   ['8% 回撤线','距 250 日最高价回落 8%','最先触发、最可靠的卖出线：先减一半，不等均线确认','5 个大顶 5/5 触发，平均让出 9.7%', !!M.dd8, M.dd8?('破 '+(M.dd8_days||0)+' 日'):'未破'],
+   ['MA20 破位','高位（120 日位置 ≥70%）跌破 20 日线','减仓一半；位置 &lt;70% 时静默，视为噪音','低位破位 6 次全部静默，事后都是假警报', !!M.high20break, M.high20break?'已破':'守住'],
+   ['MA60 破位','跌破 60 日趋势线','牛·中位→减半；牛·深位 / 过渡·中位→清仓','5 个大顶 5/5 触发，比 8% 线平均多让 0.8 点', !!M.below60, M.below60?('破 '+(M.below60_days||0)+' 日'):'守住'],
+   ['ATR 棘轮','从阶段高点回落 2.5 倍 ATR','追踪止盈，只是辅助；破 MA60 后本模块作废','非主力，单独用会卖太早', !!S.trigger, (S.fail?'已失效':(S.trigger?'触发':'未触发'))],
+   ['偏离 MA200','收盘相对 200 日均线的偏离度 · 看「还有多少下跌空间」','不是买卖信号。极低位（≤-15%）时不再砍仓，等企稳','1992 以来 ≤-10% 共 18 次：T+60 中位 +3.3%（67% 涨），T+250 仅 50%', (M2.dev!=null&&M2.dev<=-8), (M2.dev!=null?((M2.dev>0?'+':'')+M2.dev.toFixed(1)+'%'):'—')],
+   ['人民币金价','美元金价 ÷ 31.1035 × USD/CNY —— 你买卖的是元/克，不是 USD/oz','所有美元价位都要再过一次汇率才是你的成交价；汇率变动直接进你的盈亏，不进任何一条买卖规则','近 250 日：美元 -2.3% → 人民币 -8.6%，汇率多让 6.3 个点', (F.pct!=null&&(F.pct<=25||F.pct>=75)), (F.fx!=null?F.fx+(F.pct!=null?' · '+F.pct+'%分位':''):'—')],
+   ['实际利率','美国 10 年期 TIPS 实际利率 —— 持有黄金的机会成本，扣掉通胀后的无风险收益','<b style="color:#f0524d">不进任何买卖规则</b>：17 年实测与金价 60 日收益相关 −0.03，只用来量逆风有多强','当前 '+(MA.r!=null?MA.r+'%，2010 以来 '+MA.pct+'% 分位':'—'), (MA.pct!=null&&MA.pct>=90), (MA.r!=null?MA.r+'%':'—')],
+   ['1H / 4H 蓝灯','短线回调的低吸位','只在 MA20&gt;MA60 时做 T；破 MA60 直接关闭','上涨趋势 5 次净胜率 100%，下跌趋势 29%', !!(st.s1>=2||st.s4>=2), st.s1+'/'+st.s4],
+   ['趋势 / 通道','MA20 与 MA60 关系、距前 120 日高','只展示，不参与任何买卖判定','通道提示 105 次，20 日仍 +2.15%，减仓会亏', false, '仅参考'],
+   ['量能待确认','沪金当日量能未更新（黄点）','等收盘后再判定，不算「不达标」','量能项 2026-10 起已降级为展示（p=1.000）', false, '—'],
+   ['低波动环境','60 日均振幅 &lt;1.1%，阈值等价于 7 倍日波动','信号只当提示，别据此重仓','&lt;1.1% 胜率 47%；&gt;1.3% 胜率 82%', lowV, V.amp!=null?V.amp.toFixed(2)+'%':'—']
+  ];
+  const body=document.getElementById('qbody'); if(!body) return;
+  body.innerHTML=R.map(r=>{
+    const on=r[4], col=on?'#e8c35a':'#4a5563';
+    return `<tr class="${on?'on':''}"><td class="qn">${r[0]}</td><td>${r[1]}</td><td class="qa">${r[2]}</td>`+
+      `<td class="qh">${r[3]}</td><td class="qs" style="color:${col}">${on?'●':'○'} ${r[5]}</td></tr>`;
+  }).join('');
+}
+
 function renderPeriods(){
   const st=alertState();
   const box=document.getElementById('periods');
@@ -1567,12 +2461,13 @@ function renderPeriods(){
       <div class="pc-d">${dot(ok1,'空间')} ${dot(ok2,'动能')} ${dot(ok3,'形态')}<br>${gateSub}</div></div>`;
   };
   const dScore = st.m ? st.m.day.score : 0;
-  const dCls = st.crash ? 'red' : (dScore>=3 ? 'yellow' : 'gray');
+  const _lowV = (DATA.volenv||{}).grade==='low';
+  const dCls = st.crash ? 'red' : (dScore>=3 ? (_lowV?'gray':'yellow') : 'gray');
   const h1=st.h1?st.h1.detail:{}, h4=st.h4?st.h4.detail:{};
   box.innerHTML = small('1H', st.s1, st.h1&&st.h1.space, st.h1&&st.h1.momentum, st.h1&&st.h1.pattern)
     + small('4H', st.s4, st.h4&&st.h4.space, st.h4&&st.h4.momentum, st.h4&&st.h4.pattern)
     + `<div class="pcard ${dCls}"><div class="pc-l">日线底</div><div class="pc-s">${dScore}<span style="font-size:11px;color:#6e7681">/4</span></div>
-        <div class="pc-d">${st.crash?'暴跌触发 + 确认':(dScore>=3?'磨底预警':'未达标')}<br>${st.daily?'大周期允许':'大周期压制'}</div></div>`
+        <div class="pc-d">${st.crash?'暴跌触发 + 确认':(dScore>=3?(_lowV?'预警 · 低波动打折':'磨底预警'):'未达标')}<br>${st.daily?'大周期允许':'大周期压制'}${_lowV?'<br><span style="font-size:9.5px;color:#e8c35a">振幅 '+((DATA.volenv||{}).amp||0).toFixed(2)+'% · 仅参考</span>':''}</div></div>`
     + (()=>{ const ts=st.ts, T=st.T||{}, d=T.detail||{};
         const muted = ((PHASE==='bull'||PHASE==='left') && ts>=3 && !st.topBreak);
         const cls = st.topBreak?'red':(ts>=3?(muted?'gray':'purple'):(ts>=1?'yellow':'gray'));
@@ -1658,7 +2553,7 @@ function paintAlert(){
     meta.innerHTML=`${PHASE==='left'?'左侧寻底 · 卖出静音':'右侧持仓 · 卖出激活'} · 1H ${st.s1}/3 · 4H ${st.s4}/3 · 超买 ${st.ts}/4 · ${fmt(st.price)} · 60日位置(收盘) ${sp60!=null?sp60.toFixed(0)+'%':'--'} · 追踪线 ${st.S.trail?fmt(st.S.trail):'--'}${st.S.fail?'（已失效）':''}`
       + (st.low20break?` · <span style="color:#6e7681">MA20 已破但 120日位置 ${st.pos120}%（&lt;70%），${_why20}，按规则静默</span>`:'');
   }
-  renderPeriods(); renderDefense();
+  renderPeriods(); renderDefense(); fillVolEnv(); fillMA200(); fillFX(); renderMacro(); renderTranche(); renderSizing(); fillVerify(); renderQuickRef();
   return st;
 }
 
@@ -1840,7 +2735,7 @@ function initAlerts(){
          ? '牛市主升浪：MA10 与超买紫灯静音、MA60 浅破宽恕 10 天、重回 MA20 提示回补'
          : 'MA20 / MA60 清仓报警已激活，破位立刻弹窗');
     if(p==='left') document.getElementById('alertmask').classList.remove('show');
-    paintAlert(); renderDefense(); renderPeriods();
+    paintAlert(); renderDefense(); renderPeriods(); fillVolEnv(); fillMA200(); fillFX(); renderMacro(); renderTranche(); renderSizing(); fillVerify(); renderQuickRef();
   };
   const br=document.getElementById('btnrefresh'); if(br) br.onclick=()=>refresh();
   document.getElementById('ph-left').onclick=()=>setPhase('left');
@@ -2084,6 +2979,22 @@ function initTools(){
   if(lv0el && !lv0el.value) lv0el.value = live.price ? Math.floor(live.price/10)*10 : '';
   ['g-budget','g-price','g-fx','g-invested','g-held','g-lv0','g-step'].forEach(id=>document.getElementById(id).addEventListener('input',calcGrid));
   calcGrid(); renderStop();
+
+  // 三档全覆盖委托：汇率默认取实时，改金额即时重算
+  const tfx=document.getElementById('t-fx');
+  if(tfx){ const _f=(DATA.fx&&+DATA.fx)||(DATA.fxenv||{}).fx; if(_f) tfx.value=(+_f).toFixed(4); }
+  ['t-amt','t-fx'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input',()=>{renderTranche();renderSizing();}); });
+  (function(){
+    let sv={}; try{ sv=JSON.parse(localStorage.getItem('gm_size')||'{}'); }catch(e){}
+    ['s-asset','s-hold','s-save'].forEach(k=>{ const el=document.getElementById(k);
+      if(el&&sv[k]!=null) el.value=sv[k];
+      if(el) el.addEventListener('input',()=>{ const o={};
+        ['s-asset','s-hold','s-save'].forEach(kk=>{ const e2=document.getElementById(kk); if(e2) o[kk]=e2.value; });
+        try{ localStorage.setItem('gm_size',JSON.stringify(o)); }catch(e){}
+        renderSizing(); });
+    });
+  })();
+  renderTranche();
 
   document.getElementById('l-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('l-price').value = live.price ? live.price.toFixed(1) : '';

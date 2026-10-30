@@ -8,6 +8,10 @@ os.chdir(BASE)
 STEPS = [
     ("抓取行情", "fetch_full.py"),
     ("裁掉未收盘K线", "trim.py"),
+    ("数据异常校验", "validate.py"),
+    ("汇率历史 USD/CNY", "fetch_fx.py"),
+    ("实际利率 TIPS", "fetch_macro.py"),
+    ("风险温度 VIX/GVZ", "fetch_risk.py"),
     ("抓取小时线", "fetch_intraday.py"),
     ("GLD 持仓", "fetch_gld.py"),
     ("COMEX 基差", "fetch_comex.py"),

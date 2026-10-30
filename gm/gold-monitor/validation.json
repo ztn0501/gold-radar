@@ -1,0 +1,51 @@
+{
+ "status": "ok",
+ "time": "2026-10-30 13:30 UTC",
+ "date": "2026-10-29",
+ "close": 4021.23,
+ "n": 5185,
+ "fails": [],
+ "warns": [],
+ "checks": [
+  {
+   "n": "价格区间",
+   "ok": true,
+   "d": "最新收盘 4021.23，合理区间 100–20000",
+   "lv": "fail"
+  },
+  {
+   "n": "单日变动",
+   "ok": true,
+   "d": "-1.13%",
+   "lv": "fail"
+  },
+  {
+   "n": "OHLC 逻辑",
+   "ok": true,
+   "d": "近 60 根正常",
+   "lv": "fail"
+  },
+  {
+   "n": "日期序列",
+   "ok": true,
+   "d": "5185 根，重复 0，单调 是",
+   "lv": "fail"
+  },
+  {
+   "n": "最新振幅",
+   "ok": true,
+   "d": "1.58%",
+   "lv": "fail"
+  },
+  {
+   "n": "实时价可信",
+   "ok": true,
+   "d": "3944.38 对收盘 4021.23（-1.91%）",
+   "lv": "fail"
+  }
+ ],
+ "rolledBack": false,
+ "dropped": null,
+ "liveFixed": false,
+ "liveRejected": null
+}

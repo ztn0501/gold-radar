@@ -49,10 +49,13 @@ def push_history(row):
     """把当天记录写进 alert_state.json（会被 commit 回仓库）"""
     st = _load_state()
     h = st.get(HIST_KEY, [])
-    if h and h[-1].get("d") == row["d"]:
-        h[-1] = row
-    else:
-        h.append(row)
+    # 按日期去重：同一交易日只保留一条（后写覆盖前写），
+    # 避免「先跑真数据、注入测试、再回滚」这类交错写入留下同日多条互相矛盾的记录。
+    merged = {}
+    for x in h:
+        merged[str(x.get("d", ""))] = x
+    merged[str(row["d"])] = row
+    h = [merged[k] for k in sorted(merged) if k]
     st[HIST_KEY] = h[-HIST_MAX:]
     _save_state(st)
     print("[wave] 历史记录 %d 条" % len(st[HIST_KEY]))
