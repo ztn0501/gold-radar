@@ -105,6 +105,7 @@ def main():
         price = (yseq.get("cur") or {}).get("close") or price
     ma60 = ma.get("ma60") or 0
     gap60 = ma.get("gap60") or 0
+    ma20 = ma.get("ma20") or 0
     # 数据缺失时不要落到"清仓"这种吓人的默认值，避免抓数失败误报
     if not kl or price <= 0 or not ma60:
         action = "数据缺失（抓数未成功）"
@@ -192,6 +193,20 @@ def main():
 
     # 1) 磨底黄灯（买点）
     cur = yseq.get("cur") or {}
+    # 第 3 档 B 路径：雷达 ≥3/4 且收盘站上 MA20（A 路径仍是站上 MA60 且 3 日不破，两条先到先算）
+    t3_line = None
+    if ma20 and price > 0:
+        _g20 = (price / ma20 - 1) * 100
+        _sc = cur.get("score") or 0
+        if _sc >= 3 and price > ma20:
+            t3_line = "**第 3 档 B 路径成立**：雷达 %s/4 ≥3 ＋ 收盘站上 MA20 %.0f（%+.2f%%）" % (_sc, ma20, _g20)
+        else:
+            _bits = []
+            if _sc < 3:
+                _bits.append("雷达还需 %d 项（现 %s/4）" % (3 - _sc, _sc))
+            if price <= ma20:
+                _bits.append("收盘站上 MA20 %.0f（现 %+.2f%%）" % (ma20, _g20))
+            t3_line = "**第 3 档 B 路径**：" + " ＋ ".join(_bits)
     if cur.get("lit") and cur.get("date") == today:
         # 上一轮最后一次：取今天之前的最后一个事件（否则会显示成今天自己）
         _prev = [e for e in (yseq.get("events") or []) if (e.get("date") or "") < today]
@@ -208,6 +223,7 @@ def main():
                 "这一轮第 **%s** 次｜上一轮最后一次 %s（第 %s 次）" % (
                     cur.get("curSeq", "?"), _pe.get("date", "-"), _pe.get("seq", "-")),
                 vol_line,
+                t3_line or None,
                 fx_line or None,
                 rl_line or None,
                 ma_line or None,
@@ -313,7 +329,7 @@ def main():
         todo.append((
             "manual",
             "【状态播报】%s · 收 %.0f · %s/%s" % (today, price, env, zone),
-            "\n\n".join([
+            "\n\n".join([x for x in [
                 "**收盘** %.2f　MA60 %.2f（%+.2f%%）" % (price, ma60, gap60),
                 "**环境** %s　**位置** %s（距一年高 %s）　**动作** %s" % (env, zone, ("%s%%" % pos250) if pos250 is not None else "--", action),
                 fx_line or "**人民币金价** 数据未就绪",
@@ -325,9 +341,10 @@ def main():
                     (yseq.get("cur") or {}).get("denom", 4),
                     (yseq.get("cur") or {}).get("lastDate", "-"),
                     (yseq.get("cur") or {}).get("lastSeq", "-")),
+                t3_line,
                 "通道测试成功，以后的真实信号会按同样格式推送。",
                 "[打开盯盘台](https://ztn0501.github.io/gold-radar/)",
-            ])
+            ] if x])
         ))
 
     if not todo:

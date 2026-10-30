@@ -382,6 +382,139 @@ try:
 except Exception:
     data["validation"] = {}
 
+# ── 本轮阶梯图（2026-10-31）
+# 页面平时只显示「今天」，看不出这 9 个月是怎么走过来的。
+# 用 ZigZag（阈值 15%、最短间隔 4 个交易日）把顶底抽出来，直接画成折线，
+# 让「高点依次降低、低点依次降低、反弹全部夭折」这件事一眼可见。
+_zz_svg = ""
+_zz_note = ""
+try:
+    _zk = json.load(open("data_full.json", encoding="utf-8"))["kline"]
+    _zi0 = max(range(len(_zk)), key=lambda i: _zk[i]["h"])
+    _zs = _zk[_zi0:]
+    _zn = len(_zs); _ZTH = 0.15; _ZMS = 4
+    _zp = [{"i": 0, "p": _zs[0]["h"], "t": "H"}]
+    _zlo_i, _zlo = 0, _zs[0]["l"]
+    _zhi, _zhi_i, _zd = _zs[0]["h"], 0, "down"
+    for _i in range(1, _zn):
+        if _zd == "down":
+            if _zs[_i]["l"] < _zlo:
+                _zlo, _zlo_i = _zs[_i]["l"], _i
+            if _zs[_i]["h"] >= _zlo * (1 + _ZTH) and _i - _zlo_i >= _ZMS:
+                _zp.append({"i": _zlo_i, "p": _zlo, "t": "L"})
+                _zhi, _zhi_i = _zs[_i]["h"], _i
+                _zp.append({"i": _i, "p": _zs[_i]["h"], "t": "H"})
+                _zd = "up"
+        else:
+            if _zs[_i]["h"] > _zhi:
+                _zhi, _zhi_i = _zs[_i]["h"], _i
+                _zp[-1] = {"i": _i, "p": _zhi, "t": "H"}
+            if _zs[_i]["l"] <= _zhi * (1 - _ZTH) and _i - _zhi_i >= _ZMS:
+                _zp.append({"i": _i, "p": _zs[_i]["l"], "t": "L"})
+                _zlo, _zlo_i = _zs[_i]["l"], _i
+                _zd = "down"
+    if _zp[-1]["i"] != _zn - 1:
+        _zp.append({"i": _zn - 1, "p": _zs[-1]["c"], "t": "now"})
+    _zo = []
+    for _x in _zp:
+        if _zo and _zo[-1]["t"] == _x["t"] and _x["t"] in ("H", "L"):
+            if (_x["t"] == "H" and _x["p"] > _zo[-1]["p"]) or (_x["t"] == "L" and _x["p"] < _zo[-1]["p"]):
+                _zo[-1] = _x
+        else:
+            _zo.append(_x)
+    for _x in _zo:
+        _x["d"] = _zs[_x["i"]]["d"]
+    data["zigzag"] = [{"d": x["d"], "p": round(x["p"], 2), "t": x["t"]} for x in _zo]
+
+    try:
+        _zrl = json.load(open("ref_low.json", encoding="utf-8"))
+    except Exception:
+        _zrl = {}
+
+    _ZW, _ZH, _ZP = 920, 320, 60
+    _xs = [_ZP + (_ZW - 2 * _ZP - 70) * x["i"] / (_zn - 1) for x in _zo]
+    _pmax = max(x["p"] for x in _zo)
+    _pmin = min([x["p"] for x in _zo] + ([_zrl["usd"]] if _zrl.get("usd") else []))
+
+    def _Y(p):
+        return 62 + (_pmax - p) / (_pmax - _pmin) * (_ZH - 118)
+
+    _P = ['<svg viewBox="0 0 %d %d" style="width:100%%;height:auto;display:block" '
+          'xmlns="http://www.w3.org/2000/svg">' % (_ZW, _ZH)]
+    for _gp in (4000, 4500, 5000, 5500):
+        if not (_pmin <= _gp <= _pmax):
+            continue
+        _y = _Y(_gp)
+        _P.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="#1b222c"/>'
+                  % (_ZP - 10, _y, _ZW - _ZP + 10, _y))
+        _P.append('<text x="%d" y="%.1f" fill="#464e59" font-size="9.5" text-anchor="end">%d</text>'
+                  % (_ZP - 14, _y + 3.5, _gp))
+    _P.append('<polyline points="%s" fill="none" stroke="#5a6472" stroke-width="1.6" '
+              'stroke-linejoin="round"/>'
+              % " ".join("%.1f,%.1f" % (_xs[_j], _Y(x["p"])) for _j, x in enumerate(_zo)))
+    _hp = [(_xs[_j], _Y(x["p"])) for _j, x in enumerate(_zo) if x["t"] == "H"][1:]
+    if len(_hp) > 1:
+        _P.append('<polyline points="%s" fill="none" stroke="#f0524d" stroke-width="1" '
+                  'stroke-dasharray="3 5" opacity=".5"/>'
+                  % " ".join("%.1f,%.1f" % (_a, _b) for _a, _b in _hp))
+    if _zrl.get("usd") and _pmin <= _zrl["usd"] <= _pmax:
+        _yc = _Y(_zrl["usd"])
+        _P.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="#8a6d1f" '
+                  'stroke-width="1" stroke-dasharray="6 4" opacity=".55"/>'
+                  % (_ZP - 10, _yc, _ZW - _ZP + 10, _yc))
+        _P.append('<text x="%d" y="%.1f" fill="#8a6d1f" font-size="9" text-anchor="start">第 2 档触发线 %s</text>'
+                  % (_ZP - 4, _yc - 5, ("%.2f" % _zrl["usd"])))
+    for _j, x in enumerate(_zo):
+        _X, _Yy = _xs[_j], _Y(x["p"])
+        _col = {"H": "#e6edf3", "L": "#f0524d", "now": "#e8c35a"}[x["t"]]
+        _P.append('<circle cx="%.1f" cy="%.1f" r="3.4" fill="%s"/>' % (_X, _Yy, _col))
+        if x["t"] == "now":
+            _P.append('<text x="%.1f" y="%.1f" fill="%s" font-size="11.5" font-weight="600" '
+                      'text-anchor="start">%.0f</text>' % (_X + 11, _Yy - 3, _col, x["p"]))
+            _P.append('<text x="%.1f" y="%.1f" fill="#565f6b" font-size="8.5" '
+                      'text-anchor="start">%s</text>' % (_X + 11, _Yy - 15, x["d"][5:]))
+            continue
+        if _j == len(_zo) - 2 and _xs[-1] - _X < 46:
+            _P.append('<text x="%.1f" y="%.1f" fill="%s" font-size="11" font-weight="600" '
+                      'text-anchor="end">%.0f</text>' % (_X - 9, _Yy + 15, _col, x["p"]))
+            _P.append('<text x="%.1f" y="%.1f" fill="#565f6b" font-size="8.5" '
+                      'text-anchor="end">%s</text>' % (_X - 9, _Yy + 26, x["d"][5:]))
+            continue
+        _up = x["t"] != "L"
+        _ty = _Yy - 11 if _up else _Yy + 17
+        _P.append('<text x="%.1f" y="%.1f" fill="%s" font-size="11" font-weight="600" '
+                  'text-anchor="middle">%.0f</text>' % (_X, _ty, _col, x["p"]))
+        _P.append('<text x="%.1f" y="%.1f" fill="#565f6b" font-size="8.5" text-anchor="middle">%s</text>'
+                  % (_X, _ty - 12 if _up else _ty + 11, x["d"][5:]))
+    for _j in range(1, len(_zo)):
+        _ch = (_zo[_j]["p"] / _zo[_j - 1]["p"] - 1) * 100
+        if abs(_ch) < 3:
+            continue
+        _mx = (_xs[_j - 1] + _xs[_j]) / 2
+        _my = (_Y(_zo[_j - 1]["p"]) + _Y(_zo[_j]["p"])) / 2
+        _c2 = "#26a69a" if _ch > 0 else "#f0524d"
+        _txt = "%+.1f%%" % _ch
+        _w = len(_txt) * 6.2 + 8
+        _P.append('<rect x="%.1f" y="%.1f" width="%.1f" height="13" rx="3" fill="#0d1117" opacity=".92"/>'
+                  % (_mx - _w / 2, _my - 16, _w))
+        _P.append('<text x="%.1f" y="%.1f" fill="%s" font-size="10" font-weight="600" '
+                  'text-anchor="middle">%s</text>' % (_mx, _my - 6, _c2, _txt))
+    _P.append("</svg>")
+    _zz_svg = "".join(_P)
+
+    _zz_hi = ["%.0f" % x["p"] for x in _zo if x["t"] == "H"]
+    _zz_lo = ["%.0f" % x["p"] for x in _zo if x["t"] == "L"]
+    _zz_up = ["+%.1f%%" % ((_zo[_j]["p"] / _zo[_j - 1]["p"] - 1) * 100)
+              for _j in range(1, len(_zo))
+              if _zo[_j]["t"] == "H" and _zo[_j]["p"] > _zo[_j - 1]["p"]]
+    _zz_note = (
+        '<div><b style="color:#f0524d">反弹高点 %s</b>，一次比一次低</div>'
+        '<div><b style="color:#f0524d">低点 %s</b>，也在往下走</div>'
+        '<div>三次反弹 <b style="color:#e6edf3">%s</b>，全部夭折</div>'
+    ) % (" → ".join(_zz_hi[1:]), " → ".join(_zz_lo), " / ".join(_zz_up))
+except Exception as _zz_e:
+    print("[warn] 阶梯图生成失败：", _zz_e)
+
 payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 # 波动率环境单独落一份，给 gha/notify.py 拼推送文案用（2026-10-30）
 try:
@@ -539,6 +672,12 @@ table.fxt.fxtl td{line-height:1.75;padding:8px}
 }
 
 .chartbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 10px 6px;margin-bottom:12px}
+/* 阶梯图：手机端按 620px 渲染并横向滚动，缩到 320px 宽会使 11px 标注变成 4px，等于看不清 */
+#zzwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#zzwrap svg{min-width:620px}
+@media(min-width:760px){#zzwrap svg{min-width:0}}
+.zzhint{display:none;font-size:10.5px;color:#5a6371;margin:2px 0 0 4px}
+@media(max-width:759px){.zzhint{display:block}}
 .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 4px;flex-wrap:wrap;gap:8px}
 .btns{display:flex;gap:6px}
 .btns button{background:#1c232d;color:var(--dim);border:1px solid var(--line);padding:4px 11px;border-radius:5px;font-size:12px;cursor:pointer}
@@ -840,6 +979,25 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 
   <div class="chartbox" style="padding:14px 15px 12px">
     <div class="bar">
+      <div style="font-size:13px;color:#c9d1d9">本轮走了什么路 · 三段式下跌，三次反弹全部夭折</div>
+      <div style="font-size:11px;color:#6e7681">顶底取盘中极值 · 摆动阈值 15% · 最短间隔 4 个交易日</div>
+    </div>
+    <div id="zzwrap">__ZIGZAG__</div>
+    <div class="zzhint">← 左右滑动看图 →</div>
+    <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:#9aa4b2;line-height:1.8">__ZZNOTE__</div>
+    <div style="margin-top:10px;font-size:11.5px;color:#8b949e;line-height:1.9">
+      这张图解释的是一件事：<b style="color:#e6edf3">这不是「一次跌到位」，是「跌一段、弹一段、再跌一段」</b>。
+      每段下跌 15%~24%、用 40~60 个交易日；每段反弹 19%~23%、用 20~40 个交易日。
+      所以别等某天一根大阴线结束一切 —— 按前三次的节奏，<b style="color:#e8c35a">3,800 附近很可能又是一次 20% 反弹的起点，而不是终点</b>。
+      本轮从顶到现在已走 <b style="color:#e6edf3">195 个交易日（约 9 个月）</b>，是历史中级调整中位耗时（93 日 / 4.3 个月）的两倍。
+      <br>能确认熊市结束的只有一件事：<b style="color:#26a69a">出现一个比前一个更高的高点，并且收盘站上 MA60</b>。
+      在那之前，每一次反弹都只是同一件事的重复。
+      <span style="color:#5a6371">（历史四次深底之后回到当轮顶部：0.3 年 / 7.3 年 / 2.6 年 / 1.2 年，中位 1.9 年 —— 跌的时间快走完了，涨的时间还早。）</span>
+    </div>
+  </div>
+
+  <div class="chartbox" style="padding:14px 15px 12px">
+    <div class="bar">
       <div style="font-size:13px;color:#c9d1d9">人民币视角 · 你实际拿到手的那个数</div>
       <div style="font-size:11px;color:#6e7681">美元金价 ÷ 31.1035 × USD/CNY · 汇率是第二个价格</div>
     </div>
@@ -901,6 +1059,11 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       <b style="color:#e8c35a">第 2 档的触发价是锁死的：<span id="rl-num">3943.65</span></b>（2026-06-30 低点，见页面顶部那条进度条）。
       不取「每天重算的 250 日最低价」—— 那个数会跟着下跌自己往下爬，真破了也显示「还没破」，规则等于不存在。
       这条线一经锁定，只有跌破 <b>3500</b>（下面那条推翻条件）才算失效。<br>
+      <b style="color:#e8c35a">第 3 档有两条路，先到先算</b>：A 收盘站上 MA60 且 3 日不破；B 磨底雷达 ≥3/4 且收盘站上 MA20。
+      加 B 不是为了「更早买」，是为了<b>不让这一档悬空</b>：如果价格在 3,700–3,900 之间磨很久，MA60 会一直压在头上，
+      只等 A 可能一年都不触发；而雷达 ≥3/4 说明「跌不动」的证据已经出现，再配一条 MA20 就够启动了。
+      历史 111 次雷达 ≥3/4，达标后中位 <b>11 个交易日</b>就站上 MA60，只有 1 次（2026-10-09）400 日内没站上 ——
+      提前量不大，但它保证这条规则永远有出口。<br>
       <b style="color:#8b949e">推翻条件</b>：跌破 <b style="color:#f0524d">3500</b>（自高点 -37.5%，接近 1992 年以来最深调整 -38.6%）→ 这不是中级调整而是结构性熊市，<b>三档全部作废，停止加仓，重新评估</b>。
     </div>
 
@@ -2389,15 +2552,18 @@ function renderTranche(){
   const amt=parseFloat((document.getElementById('t-amt')||{}).value)||0;
   const fx=parseFloat((document.getElementById('t-fx')||{}).value)||E.fx||6.66;
   const px=((live&&live.price)?live.price:(T.close||0));
-  let low=null, ma60=M.ma60;
+  let low=null, ma60=M.ma60, ma20=M.ma20;
   (E.levels||[]).forEach(l=>{ if(l.n==='参照低点') low=l.usd; });
   if(!px){
     box.innerHTML='<div style="font-size:11.5px;color:#6e7681">价位数据未就绪（行情未载入）</div>'; return;
   }
+  const bLine = ma20 ? `B：雷达 ≥3/4 且收盘站上 ${fmt(ma20,0)}` : 'B：（MA20 数据未就绪）';
   const defs=[
     {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`就在今天，现价 ${fmt(px,0)} 直接买<br>不等任何确认`, note:'位置已在 -28%，越过历次中级调整中位'},
     {n:'第 2 档 · 破前低', w:.30, usd:low, cls:'t2', cond:`收盘跌破 ${fmt(low,2)}<br>次日开盘买`, note:'前低破位 = 恐慌价，只买这一次；参照线已锁死，不随窗口滑动'},
-    {n:'第 3 档 · 收复趋势', w:.30, usd:ma60, cls:'t3', cond:`收盘站上 ${fmt(ma60,0)}<br>且 3 日不破再买`, note:'趋势确认，多付 6.7% 买确定性'}
+    {n:'第 3 档 · 趋势确认', w:.30, usd:ma60, cls:'t3',
+     cond:`A：收盘站上 ${fmt(ma60,0)}<br>且 3 日不破<br>${bLine}`,
+     note:'A / B 先到先算，金额不变；B 是提前量，历史上比 A 早约 11 个交易日'}
   ];
   let g=0, cost=0;
   const cards=defs.map(d=>{
@@ -3070,6 +3236,7 @@ setInterval(refresh, 60000);
 """
 
 html = html.replace("__PAYLOAD__", payload)
+html = html.replace("__ZIGZAG__", _zz_svg).replace("__ZZNOTE__", _zz_note)
 path = "index.html"
 open(path, "w", encoding="utf-8").write(html)
 print("written", path, len(html))
