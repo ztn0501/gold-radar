@@ -5,7 +5,7 @@
   "momentum": false,
   "pattern": false,
   "detail": {
-   "pos": 4.0,
+   "pos": 6.1,
    "shadow": 9.1,
    "cross": false,
    "diverge": false,
@@ -20,7 +20,7 @@
   "momentum": false,
   "pattern": false,
   "detail": {
-   "pos": 3.1,
+   "pos": 4.6,
    "shadow": 9.1,
    "cross": false,
    "diverge": false,
@@ -34,11 +34,11 @@
   "allow": false,
   "label": "趋势向下，做T信号已关闭",
   "close": 836.62,
-  "ma20d": 878.11,
-  "ma60d": 927.9,
+  "ma20d": 878.05,
+  "ma60d": 927.88,
   "gap60": -9.84,
   "bars": 122
  },
- "generated": "2026-10-30 16:16:56",
+ "generated": "2026-10-30 17:12:58",
  "source": "沪金主力 AU0 60m（内盘时段，跨市场代理）"
 }
