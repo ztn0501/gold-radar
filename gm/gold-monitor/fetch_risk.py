@@ -68,9 +68,14 @@ def main():
                    "gvz": [gvz.get(d) for d in dates]},
                   open("risk_hist.json", "w", encoding="utf-8"),
                   separators=(",", ":"))
-        print("[risk] VIX %d 根 / GVZ %d 根，%s → %s，最新 VIX %.2f GVZ %.2f"
-              % (len(vix), len(gvz), dates[0], dates[-1], vix[dates[-1]] or 0,
-                 gvz.get(dates[-1]) or 0))
+        # 打印用「两边都有值」的最后一天，避免单边日期（如 GVZ 已出、VIX 未出）
+        # 触发 KeyError —— 之前就是这里崩的，导致日志误报「保留旧文件」。
+        _paired = [d for d in dates if vix.get(d) and gvz.get(d)]
+        _last = _paired[-1] if _paired else dates[-1]
+        _lag = "" if _last == dates[-1] else "（%s 只有单边数据，已跳）" % dates[-1]
+        print("[risk] VIX %d 根 / GVZ %d 根，%s → %s，最新配对 VIX %.2f GVZ %.2f%s"
+              % (len(vix), len(gvz), dates[0], _last,
+                 vix.get(_last) or 0, gvz.get(_last) or 0, _lag))
     except Exception as e:
         print("[risk] VIX/GVZ 抓取失败：%s（保留旧文件）" % e)
 

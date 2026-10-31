@@ -145,9 +145,9 @@ if len(_kb) >= 130:
                       "med": (round(_amed, 2) if _ok_hist else None),
                       "grade": _agr, "n": len(_ah)}
     # ---------- 偏离 MA200（2026-10-30 新增）：还有多少下跌空间 ----------
-    # 依据：1992-2026 全样本，偏离 MA200 ≤ -10% 共 18 次（20 日去重）：
-    # T+60 中位 +3.3%（67% 涨）、T+250 中位 +1.0%（50%），后续 250 日最低中位 -8.4%、最深 -20.7%。
-    # 即短期偏反弹、一年后对半开；深度看的是「离历史极值还有多远」。
+    # 依据：本系统 20 年数据（2006-10 起，5185 根），偏离 MA200 ≤ -10% 共 8 次（20 日去重）：
+    # 7 次最终收复 MA200，中位 49 个交易日。T+250 对半开。
+    # 样本只有 8 个，只当参考。早期研究中引用的「1992 起 18 次」不在本系统数据范围内，已改掉。
     _dev_s = []
     _m200_prev = None
     if _n >= 220:
@@ -321,7 +321,7 @@ try:
             "min": round(min(_all), 2), "max": round(_mx, 2), "maxDate": _mxd,
             "d60": round((_mv[-1] - _mv[-61]) * 100),
             "d250": round((_mv[-1] - _mv[-251]) * 100) if len(_mv) > 251 else None,
-            "n": len(_mv), "from": _md[0],
+            "n": len(_mv), "from": _md[0], "to": _md[-1],
             # 金价见顶那一档利率 → 现在
             "peakDate": _hi["d"], "peakPx": round(_hi["h"], 1), "peakR": round(_rh, 2),
             "sincePeakBp": round((_cur - _rh) * 100),
@@ -369,6 +369,10 @@ try:
             "vixMin": round(_vs[0], 2), "vixMax": round(_vs[-1], 2),
             "gvzMin": round(_gs[0], 2), "gvzMax": round(_gs[-1], 2),
             "n": len(_pair), "from": _pair[0][0], "to": _pair[-1][0],
+            # 最后一天若只有 VIX 或只有 GVZ（另一方当日未发布），单独带出来，
+            # 避免「最新数据没显示、又不知道为什么」。
+            "pending": ({"d": _R["d"][-1], "vix": _R["vix"][-1], "gvz": _R["gvz"][-1]}
+                        if _R["d"][-1] != _pair[-1][0] else None),
         }
     else:
         data["riskenv"] = {}
@@ -987,9 +991,12 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:#9aa4b2;line-height:1.8">__ZZNOTE__</div>
     <div style="margin-top:10px;font-size:11.5px;color:#8b949e;line-height:1.9">
       这张图解释的是一件事：<b style="color:#e6edf3">这不是「一次跌到位」，是「跌一段、弹一段、再跌一段」</b>。
-      每段下跌 15%~24%、用 40~60 个交易日；每段反弹 19%~23%、用 20~40 个交易日。
-      所以别等某天一根大阴线结束一切 —— 按前三次的节奏，<b style="color:#e8c35a">3,800 附近很可能又是一次 20% 反弹的起点，而不是终点</b>。
-      本轮从顶到现在已走 <b style="color:#e6edf3">195 个交易日（约 9 个月）</b>，是历史中级调整中位耗时（93 日 / 4.3 个月）的两倍。
+      后三段下跌 15%~24%、用 15~52 个交易日；三次反弹 19%~23%、用 18~40 个交易日。
+      <span style="color:#8b949e">（第一段只用了 2 个交易日 —— 2026-01-30 单日 -9.6%，是 20 年最大单日跌幅，属闪崩例外，不能当模板。）</span>
+      所以别等某天一根大阴线结束一切 —— 按前三段的节奏推演，<b style="color:#e8c35a">3,800 附近更可能是一次 20% 反弹的起点，而不是终点</b>。
+      <span style="color:#5a6371">这是节奏推演，不是承诺；如果节奏变了（比如直接放量破位），以信号为准。</span>
+      本轮从顶到现在已走 <b style="color:#e6edf3">195 个交易日（约 9 个月）</b>，是 20 年同级调整（回撤 ≥18%，共 8 段）中位耗时 <b>110 个交易日（约 5.1 个月）</b>的 <b>1.8 倍</b>，
+      也超过了 20 年里最长的一段（2012-10→2013-06，190 个交易日）—— 时间上已无更长的先例。
       <br>能确认熊市结束的只有一件事：<b style="color:#26a69a">出现一个比前一个更高的高点，并且收盘站上 MA60</b>。
       在那之前，每一次反弹都只是同一件事的重复。
       <span style="color:#5a6371">（历史四次深底之后回到当轮顶部：0.3 年 / 7.3 年 / 2.6 年 / 1.2 年，中位 1.9 年 —— 跌的时间快走完了，涨的时间还早。）</span>
@@ -1030,7 +1037,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
         <div class="wtc c">它<b>不是触发条件</b>，只是注释。所以它兑现了也不会让你动 —— 这类条件永远可以被下一个条件替代</div></div>
       <div class="wtr"><div class="wtc a">MA60 收复</div>
         <div class="wtc b">MA60 在 4291，要价格自己先涨 <b>+6.7%</b> 上来</div>
-        <div class="wtc c">历史深跌样本（偏离 MA200 ≤-10%，19 次）18 次最终收复 MA200，<b>中位 56 个交易日</b> ≈ 2.7 个月</div></div>
+        <div class="wtc c">本系统 20 年数据内，偏离 MA200 ≤-10% 只有 <b>8 次</b>（20 日去重），7 次最终收复，中位 <b>49 个交易日</b> ≈ 2.3 个月。<b style="color:#8b949e">样本仅 8 个，只当参考，不当承诺</b></div></div>
       <div class="wtr"><div class="wtc a">黄灯确认</div>
         <div class="wtc b">10-28 磨底刚到 2/4，<b style="color:#f0524d">10-29 一根阴线掉回 1/4</b> —— 亮两天就灭</div>
         <div class="wtc c">「确认」本身需要 3 天，3 天里价格可以再跌 3% —— 你等的是一个<b>用时间换不确定</b>的东西</div></div>
@@ -1054,7 +1061,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
     <div class="tran" id="tranbox"></div>
 
     <div style="font-size:11.5px;color:#9aa4b2;line-height:1.9">
-      <b style="color:#e8c35a">第 1 档今天就执行</b>，它是唯一无条件的一档 —— 位置已在 -28%，越过历次中级调整的中位（-25%），这一步不需要再等任何确认。<br>
+      <b style="color:#e8c35a">第 1 档现在就该执行</b>，它是唯一无条件的一档 —— 位置已越过历次中级调整的中位（-25%），此刻比那还深，这一步不需要再等任何确认。<br>
       <b style="color:#f0524d">第 1 档没执行完，第 2 / 3 档的钱不许动</b>；三档之间不许挪用额度；执行后 <b>30 天内不许改比例</b>。<br>
       <b style="color:#e8c35a">第 2 档的触发价是锁死的：<span id="rl-num">3943.65</span></b>（2026-06-30 低点，见页面顶部那条进度条）。
       不取「每天重算的 250 日最低价」—— 那个数会跟着下跌自己往下爬，真破了也显示「还没破」，规则等于不存在。
@@ -1064,7 +1071,8 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       只等 A 可能一年都不触发；而雷达 ≥3/4 说明「跌不动」的证据已经出现，再配一条 MA20 就够启动了。
       历史 111 次雷达 ≥3/4，达标后中位 <b>11 个交易日</b>就站上 MA60，只有 1 次（2026-10-09）400 日内没站上 ——
       提前量不大，但它保证这条规则永远有出口。<br>
-      <b style="color:#8b949e">推翻条件</b>：跌破 <b style="color:#f0524d">3500</b>（自高点 -37.5%，接近 1992 年以来最深调整 -38.6%）→ 这不是中级调整而是结构性熊市，<b>三档全部作废，停止加仓，重新评估</b>。
+      <b style="color:#8b949e">推翻条件</b>：跌破 <b style="color:#f0524d">3500</b>（自高点 -37.5%）→ <b>已超出 20 年所有「快速调整」的范围</b>（单段最深 -34.3%，2012-10→2013-06），
+      进入 2011-2015 那种整轮 -45.5%、耗时 4.3 年的级别 → 这不是中级调整而是结构性熊市，<b>三档全部作废，停止加仓，重新评估</b>。
     </div>
 
     <div style="margin-top:18px;border-top:1px solid #1e252f;padding-top:14px">
@@ -2308,7 +2316,7 @@ function renderMacro(){
      d:`${M.maxDate} 利率见顶 ${M.max.toFixed(2)}%，之后回落 ${Math.abs(M.rSinceTopBp)}bp，<b>但金价同期又跌了 ${Math.abs(M.pxSinceTop)}%</b> —— 最近这段卖压已经不是利率驱动。`},
     {n:'极值程度', a:M.pct+'%', b:'分位',
      c:`17 年里高于 2.5% 的交易日只占 <b>${M.hiShare}%</b>`,
-     d:`2010 年以来 ${M.n} 个交易日，区间 ${M.min}% ~ ${M.max}%。<b>现在的实际利率处在 17 年最高的一小撮里</b> —— 顺风谈不上，先看逆风什么时候停。`},
+     d:`2010 年以来 ${M.n} 个交易日（至 ${M.to||'—'}），区间 ${M.min}% ~ ${M.max}%。<b>现在的实际利率处在 17 年最高的一小撮里</b> —— 顺风谈不上，先看逆风什么时候停。`},
   ];
 
   // 风险温度：只回答「恐慌有多强、是不是黄金专属」，不产生信号
@@ -2334,7 +2342,10 @@ function renderMacro(){
       : (K.gvzPct>=75&&K.vixPct>=75
         ? `<b style="color:#f0524d">全市场在慌</b>：股市 ${K.vixPct}%、黄金 ${K.gvzPct}% 分位同时偏高，这是系统性风险释放。历史上这种状态的后续收益同样不优于基准，但波动会更大。`
         : `恐慌程度不高（VIX ${K.vixPct}%、GVZ ${K.gvzPct}% 分位）。${isGoldOnly?'黄金相对股市更慌，但绝对水平都不极端。':'两个市场都在常态区间。'}`)}
-      <span style="color:#6e7681">「黄金比股市更慌」这种状态，历史上只占 <b>${goldOnly}%</b> 的交易日（${K.n} 日样本）。</span></div>`;
+      <span style="color:#6e7681">「黄金比股市更慌」这种状态，历史上只占 <b>${goldOnly}%</b> 的交易日（${K.n} 日样本）。</span>
+      <span style="color:#5a6371;display:block;margin-top:5px">数据截至 <b>${K.to||'—'}</b> · VIX 与 GVZ 按<b>同一天配对</b>计算，任一方当日未发布就一起退到前一天 —— 所以这两个数不一定是最新交易日。</span>
+      ${K.pending?`<span style="color:#e8c35a;display:block;margin-top:3px">⚠ <b>${K.pending.d}</b> 已有单边数据（${K.pending.vix!=null?'VIX '+K.pending.vix.toFixed(2):''}${(K.pending.vix!=null&&K.pending.gvz!=null)?' · ':''}${K.pending.gvz!=null?'GVZ '+K.pending.gvz.toFixed(2):''}），因另一项当日未发布，暂不计入上面三个读数。</span>`:''}
+      </div>`;
   }
 
   W.innerHTML=`
@@ -2399,7 +2410,7 @@ function renderSizing(){
   const W=v=>v>=10000?(v/10000).toFixed(v>=100000?0:1)+' 万':Math.round(v)+' 元';
   const P=v=>(v/asset*100).toFixed(1)+'%';
   const Y=v=>save>0?(v/save).toFixed(1)+' 年储蓄':(v>=10000?(v/10000).toFixed(0)+' 万':v+' 元');
-  const loss25=after*0.25, loss386=after*0.386;
+  const loss25=after*0.25, loss343=after*0.343, loss455=after*0.455;
   const cap15=asset*0.15, cap20=asset*0.20;
 
   const chips=[[5,'#26a69a'],[10,'#58a6ff'],[15,'#e8c35a'],[20,'#f0524d']].map(([p])=>{
@@ -2415,7 +2426,8 @@ function renderSizing(){
       <tr><td>本次三档计划投入</td><td>${W(plan)}</td><td>${P(plan)}</td><td style="color:#5a6371">分三次付</td></tr>
       <tr class="key"><td>执行后黄金合计</td><td>${W(after)}</td><td>${P(after)}</td><td>这是真正要回答的数</td></tr>
       <tr class="sub"><td>└ 若金价再跌 25%（历次中级调整中位）</td><td style="color:#26a69a">-${W(loss25)}</td><td style="color:#26a69a">-${P(loss25)}</td><td>≈ ${Y(loss25)}</td></tr>
-      <tr class="sub"><td>└ 若跌 38.6%（1992 以来最深）</td><td style="color:#26a69a">-${W(loss386)}</td><td style="color:#26a69a">-${P(loss386)}</td><td>≈ ${Y(loss386)}</td></tr>
+      <tr class="sub"><td>└ 若再跌 34.3%（20 年单段最深，2012-10→2013-06）</td><td style="color:#26a69a">-${W(loss343)}</td><td style="color:#26a69a">-${P(loss343)}</td><td>≈ ${Y(loss343)}</td></tr>
+      <tr class="sub"><td>└ 若再跌 45.5%（20 年整轮最深，2011-2015，4.3 年）</td><td style="color:#26a69a">-${W(loss455)}</td><td style="color:#26a69a">-${P(loss455)}</td><td>≈ ${Y(loss455)}</td></tr>
     </tbody></table>
     <div style="margin-top:8px">${chips}</div>`;
 
@@ -2470,7 +2482,7 @@ function fillMA200(){
   const d=E.dev;
   let col,lbl;
   if(d<=-15){ col='#f0524d'; lbl='极端低位 · 接近历史极限'; }
-  else if(d<=-8){ col='#e8c35a'; lbl='深度低位 · 下方空间有限'; }
+  else if(d<=-8){ col='#e8c35a'; lbl='深度低位 · 20 年 3% 分位'; }
   else if(d<=8){ col='#8b949e'; lbl='正常区间'; }
   else { col='#f0524d'; lbl='偏高 · 追高风险'; }
   v.innerHTML = `<span style="color:${col}">${d>0?'+':''}${d.toFixed(1)}%</span>`;
@@ -2510,7 +2522,7 @@ function fillFX(){
   const drag250 = hist.drag!=null?hist.drag:null;
   const st=[
     {l:'人民币金价', v:fmt(cnyNow,1), u:'元/克', d:`${isLive?'实时':'收盘'} ${fmt(pxNow,1)} USD × ${fxNow} ÷ 31.1035<br>历史最高 ${E.cnyHi?fmt(E.cnyHi,1)+' 元/克':'-'} · 收盘口径 ${fmt(E.cny,1)}`},
-    {l:'USD/CNY', v:fxNow, u:'', d:`汇改后 ${E.pct}% 分位（收盘口径）<br>区间 ${E.min} – ${E.max}`,
+    {l:'USD/CNY', v:fxNow, u:'', d:`上方为<b>实时</b>汇率；分位按每日收盘序列算<br>汇改后 ${E.pct}% 分位 · 区间 ${E.min} – ${E.max}`,
      c: (E.pct<=25?'#26a69a':(E.pct>=75?'#f0524d':'#8b949e'))},
     {l:'汇率敏感度', v:fmt(E.sens,1), u:'元/克', d:`人民币每升值 1%<br>你的持仓被动 -${fmt(E.sens,1)} 元/克`},
     {l:'近 250 日 汇率吃掉', v:(drag250!=null?fmt(Math.abs(drag250),1)+'pp':'-'), u:'',
@@ -2558,8 +2570,10 @@ function renderTranche(){
     box.innerHTML='<div style="font-size:11.5px;color:#6e7681">价位数据未就绪（行情未载入）</div>'; return;
   }
   const bLine = ma20 ? `B：雷达 ≥3/4 且收盘站上 ${fmt(ma20,0)}` : 'B：（MA20 数据未就绪）';
+  const MK=DATA.macroenv||{};
+  const ddNow=(MK.peakPx&&px)?((px/MK.peakPx-1)*100):null;
   const defs=[
-    {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`就在今天，现价 ${fmt(px,0)} 直接买<br>不等任何确认`, note:'位置已在 -28%，越过历次中级调整中位'},
+    {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`现在，现价 ${fmt(px,0)} 直接买<br>不等任何确认`, note:(ddNow!=null?('自 1 月高点 '+ddNow.toFixed(0)+'%，已越过中级调整中位'):'已越过中级调整中位')},
     {n:'第 2 档 · 破前低', w:.30, usd:low, cls:'t2', cond:`收盘跌破 ${fmt(low,2)}<br>次日开盘买`, note:'前低破位 = 恐慌价，只买这一次；参照线已锁死，不随窗口滑动'},
     {n:'第 3 档 · 趋势确认', w:.30, usd:ma60, cls:'t3',
      cond:`A：收盘站上 ${fmt(ma60,0)}<br>且 3 日不破<br>${bLine}`,
@@ -2597,7 +2611,7 @@ function renderQuickRef(){
    ['MA20 破位','高位（120 日位置 ≥70%）跌破 20 日线','减仓一半；位置 &lt;70% 时静默，视为噪音','低位破位 6 次全部静默，事后都是假警报', !!M.high20break, M.high20break?'已破':'守住'],
    ['MA60 破位','跌破 60 日趋势线','牛·中位→减半；牛·深位 / 过渡·中位→清仓','5 个大顶 5/5 触发，比 8% 线平均多让 0.8 点', !!M.below60, M.below60?('破 '+(M.below60_days||0)+' 日'):'守住'],
    ['ATR 棘轮','从阶段高点回落 2.5 倍 ATR','追踪止盈，只是辅助；破 MA60 后本模块作废','非主力，单独用会卖太早', !!S.trigger, (S.fail?'已失效':(S.trigger?'触发':'未触发'))],
-   ['偏离 MA200','收盘相对 200 日均线的偏离度 · 看「还有多少下跌空间」','不是买卖信号。极低位（≤-15%）时不再砍仓，等企稳','1992 以来 ≤-10% 共 18 次：T+60 中位 +3.3%（67% 涨），T+250 仅 50%', (M2.dev!=null&&M2.dev<=-8), (M2.dev!=null?((M2.dev>0?'+':'')+M2.dev.toFixed(1)+'%'):'—')],
+   ['偏离 MA200','收盘相对 200 日均线的偏离度 · 看「还有多少下跌空间」','不是买卖信号。极低位（≤-15%）时不再砍仓，等企稳','本系统 20 年数据（2006 起）：≤-10% 仅 8 次，T+60 中位 +3.3%，T+250 对半开', (M2.dev!=null&&M2.dev<=-8), (M2.dev!=null?((M2.dev>0?'+':'')+M2.dev.toFixed(1)+'%'):'—')],
    ['人民币金价','美元金价 ÷ 31.1035 × USD/CNY —— 你买卖的是元/克，不是 USD/oz','所有美元价位都要再过一次汇率才是你的成交价；汇率变动直接进你的盈亏，不进任何一条买卖规则','近 250 日：美元 -2.3% → 人民币 -8.6%，汇率多让 6.3 个点', (F.pct!=null&&(F.pct<=25||F.pct>=75)), (F.fx!=null?F.fx+(F.pct!=null?' · '+F.pct+'%分位':''):'—')],
    ['实际利率','美国 10 年期 TIPS 实际利率 —— 持有黄金的机会成本，扣掉通胀后的无风险收益','<b style="color:#f0524d">不进任何买卖规则</b>：17 年实测与金价 60 日收益相关 −0.03，只用来量逆风有多强','当前 '+(MA.r!=null?MA.r+'%，2010 以来 '+MA.pct+'% 分位':'—'), (MA.pct!=null&&MA.pct>=90), (MA.r!=null?MA.r+'%':'—')],
    ['1H / 4H 蓝灯','短线回调的低吸位','只在 MA20&gt;MA60 时做 T；破 MA60 直接关闭','上涨趋势 5 次净胜率 100%，下跌趋势 29%', !!(st.s1>=2||st.s4>=2), st.s1+'/'+st.s4],
