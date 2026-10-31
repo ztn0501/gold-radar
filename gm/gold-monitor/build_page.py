@@ -220,6 +220,8 @@ try:
                 _rows.append(_row(_lbl, len(_c_arr) - 1 - _n))
         _hi_i = max(range(len(_kb)), key=lambda i: _kb[i]["h"])
         _pct_from_hi = (_c_arr[-1] / _kb[_hi_i]["h"] - 1) * 100
+        # 收盘口径：用于口径说明条，避免和盘中口径混用（两者差约 3.3 个点）
+        _dd_close = (_c_arr[-1] / max(_c_arr) - 1) * 100
         _cny_from_hi = ((_c_arr[-1] * _fx_now) / (_kb[_hi_i]["h"] * _fx_at(_d_arr[_hi_i])) - 1) * 100
         _rows.append({"k": "2026 高点至今", "usd": round(_pct_from_hi, 2),
                       "fx": round((_fx_now / _fx_at(_d_arr[_hi_i]) - 1) * 100, 2),
@@ -276,6 +278,10 @@ try:
             "sens": round(_cny_now * 0.01, 1),
             "levels": _lv,
             "refLow": {"usd": _rl.get("usd"), "d": _rl.get("d")},
+            # 跌幅口径：页面全用盘中价，这里同时给出收盘口径，供说明条并列展示
+            "dd": {"hi": round(_pct_from_hi, 2), "close": round(_dd_close, 2),
+                   "peakHi": round(_kb[_hi_i]["h"], 1), "peakHiD": _d_arr[_hi_i],
+                   "peakClose": round(max(_c_arr), 1)},
         }
 except Exception as _e:
     data["fxenv"] = {}
@@ -562,6 +568,10 @@ h1{font-size:17px;font-weight:600;letter-spacing:.5px;color:var(--dim)}
   border:1px solid #2b3440;background:#0f141b;color:#9aa4b2;line-height:1.6}
 .refbar .rb-t{font-weight:600;letter-spacing:.2px}
 .refbar .rb-n{font-variant-numeric:tabular-nums;font-weight:700}
+.ddnote{font-size:10.5px;color:#6e7681;line-height:1.75;margin:-8px 0 14px;
+  padding-left:2px;letter-spacing:.1px}
+.ddnote b{color:#9aa4b2;font-weight:600}
+.ddnote .sep{color:#3b444f;margin:0 5px}
 .refbar.warn{border-color:#5a4a22;background:#1a1608}
 .refbar.warn .rb-t{color:#e8c35a}
 .refbar.broken{border-color:#5c2b2b;background:#1a0d0d}
@@ -886,9 +896,10 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 .mcard .h .sc b{font-size:16px;color:#e6edf3}
 .mrow{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#8b949e;margin:5px 0}
 .dot{width:7px;height:7px;border-radius:50%;flex:none}
-.ok{background:#f0524d;box-shadow:0 0 6px rgba(240,82,77,.5)}
-.no{background:#3a434f}
-.na{background:#e8c35a;box-shadow:0 0 6px rgba(232,195,90,.5)}
+/* 只作用于圆点：原来写成裸 .ok，会命中 .verline.ok，把整条自检提示染成红底 */
+.dot.ok{background:#f0524d;box-shadow:0 0 6px rgba(240,82,77,.5)}
+.dot.no{background:#3a434f}
+.dot.na{background:#e8c35a;box-shadow:0 0 6px rgba(232,195,90,.5)}
 .mrow .v{margin-left:auto;color:#6e7681;font-size:10.5px}
 .distwrap{border-top:1px dashed #232a34;padding-top:11px}
 .distline{display:flex;justify-content:space-between;font-size:12px;color:#9aa4b2;margin-bottom:7px}
@@ -969,6 +980,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
   </div>
 
   <div class="refbar" id="refbar"></div>
+  <div class="ddnote" id="ddnote"></div>
 
   <div class="grid">
     <div class="card"><div class="k">近 60 日区间位置</div><div class="v" id="d1">--</div><div class="s" id="s1">--</div></div>
@@ -1073,6 +1085,23 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       提前量不大，但它保证这条规则永远有出口。<br>
       <b style="color:#8b949e">推翻条件</b>：跌破 <b style="color:#f0524d">3500</b>（自高点 -37.5%）→ <b>已超出 20 年所有「快速调整」的范围</b>（单段最深 -34.3%，2012-10→2013-06），
       进入 2011-2015 那种整轮 -45.5%、耗时 4.3 年的级别 → 这不是中级调整而是结构性熊市，<b>三档全部作废，停止加仓，重新评估</b>。
+    </div>
+
+    <div style="margin-top:14px;padding:11px 13px;border-radius:7px;border:1px solid #3a3220;background:#15130c;font-size:11.5px;color:#c9d1d9;line-height:1.9">
+      <b style="color:#e8c35a">但「跌得深」本身不是买入理由 —— 这条必须单独说，因为它和上面的三档是两件事。</b><br>
+      20 年数据里，回撤 ≤-20% 之后买入（7 个独立事件），250 个交易日的中位收益 <b>+6.5%</b>、胜率 71%；
+      而随便挑一天买入，中位 <b>+7.3%</b>、胜率 65%。<b style="color:#f0524d">胜率高 6 个点，中位收益反而低 0.8 个点。</b>
+      样本只有 7 个，但方向很清楚：深跌给的是<b style="color:#e8c35a">赔率</b>，不是<b style="color:#e8c35a">概率</b>。<br>
+      所以三档买的是赔率 —— 按盘中口径，向下到 20 年极限（3,678，-34.3%）还有约 <b id="gap-down">5</b>%，向上到 MA60 要 <b id="gap-up">10.5</b>%。
+      把它当成「跌够了就该涨」，你就会在第一档之后再补一档，那不是纪律，是加仓。
+    </div>
+
+    <div style="margin-top:10px;padding:11px 13px;border-radius:7px;border:1px solid #2b3440;background:#0f141b;font-size:11.5px;color:#c9d1d9;line-height:1.9">
+      <b style="color:#e8c35a">见底之后还有多长路 —— 这是唯一一张不需要猜底的时间表。</b><br>
+      6 段历史 ≥15% 回撤，从谷底那天起算：站上 MA60 中位 <b>25 个交易日</b>；站上 MA200 中位 <b>65 个交易日</b>；
+      收复前高 <b>155 – 2,133 日，中位 683 日（约 2.7 年）</b>。<br>
+      含义很直接：<b style="color:#f0524d">即使买在最低点，持有期也要按「2–3 年」准备，不是「几个月」。</b>
+      但见底后 60 个交易日，6 段全部为正、中位 <b>+11.7%</b> —— 短期反弹是有的，别因为三个月不涨就否定整笔决定。
     </div>
 
     <div style="margin-top:18px;border-top:1px solid #1e252f;padding-top:14px">
@@ -1610,6 +1639,32 @@ function paintHeader(){
   document.getElementById('sesss').textContent = '北京时间 ' + s.hhmm + ' · ' + s.desc;
 
   renderRefLow();
+  renderDDNote();
+}
+
+// 跌幅口径说明条：全页所有跌幅都是「现价 ÷ 盘中最高价」，历史极值也是盘中口径。
+// 收盘口径的差约 3.3 个点，两把尺子不能混着比，所以把它写死在首屏下面。
+function renderDDNote(){
+  const E = DATA.fxenv || {}, box = document.getElementById('ddnote');
+  if(!box) return;
+  const G = E.dd || {};
+  if(G.hi == null){ box.innerHTML = ''; return; }
+  // 用实时价重算，否则构建快照的跌幅会和顶部实时价打架
+  const _px = (live && live.price) || null;
+  const hPct = _px ? (_px / G.peakHi - 1) * 100 : G.hi;
+  const cPct = _px ? (_px / G.peakClose - 1) * 100 : G.close;
+  box.innerHTML =
+    `<b>跌幅口径</b>：本页一律按<b>盘中最高价</b>计 —— ${G.peakHiD || ''} 盘中高 ${fmt(G.peakHi, 2)}、收盘高 ${fmt(G.peakClose, 1)}。` +
+    `现价按盘中高 <b>${hPct.toFixed(1)}%</b>，按收盘高 <b>${cPct.toFixed(1)}%</b>。` +
+    `<span class="sep">|</span>历史单段最深：盘中 <b>-34.3%</b>（2012-10 → 2013-06）／收盘 <b>-33.0%</b>。` +
+    `<span class="sep">|</span>两个口径都合法，但<b>不许互相比较</b> —— 拿盘中口径去对收盘口径，会凭空多出 2–3 个点，得出「已跌过头」的错觉。`;
+  // 赔率两端的百分比跟着实时价走，写死会过期
+  const _gd = document.getElementById('gap-down'), _gu = document.getElementById('gap-up');
+  if(_px){
+    if(_gd) _gd.textContent = Math.abs((3678 / _px - 1) * 100).toFixed(0);
+    const _m60 = (DATA.ma || {}).ma60;
+    if(_gu && _m60) _gu.textContent = ((_m60 / _px - 1) * 100).toFixed(1);
+  }
 }
 
 // 参照低点进度条：第 2 档的触发线距离多远，用实时价算，不用收盘价
@@ -2573,7 +2628,10 @@ function renderTranche(){
   const MK=DATA.macroenv||{};
   const ddNow=(MK.peakPx&&px)?((px/MK.peakPx-1)*100):null;
   const defs=[
-    {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`现在，现价 ${fmt(px,0)} 直接买<br>不等任何确认`, note:(ddNow!=null?('自 1 月高点 '+ddNow.toFixed(0)+'%，已越过中级调整中位'):'已越过中级调整中位')},
+    {n:'第 1 档 · 无条件', w:.40, usd:px, cls:'t1', cond:`现在，现价 ${fmt(px,0)} 直接买<br>不等任何确认`,
+     note:(ddNow!=null
+        ? ('自 1 月盘中高 '+ddNow.toFixed(1)+'%，已越过历次中级调整中位（口径见顶部小字）')
+        : '已越过历次中级调整中位')},
     {n:'第 2 档 · 破前低', w:.30, usd:low, cls:'t2', cond:`收盘跌破 ${fmt(low,2)}<br>次日开盘买`, note:'前低破位 = 恐慌价，只买这一次；参照线已锁死，不随窗口滑动'},
     {n:'第 3 档 · 趋势确认', w:.30, usd:ma60, cls:'t3',
      cond:`A：收盘站上 ${fmt(ma60,0)}<br>且 3 日不破<br>${bLine}`,
