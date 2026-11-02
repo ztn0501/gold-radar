@@ -943,96 +943,52 @@
  },
  {
   "name": "④ 当前",
-  "date": "2026-10-30",
+  "date": "2026-11-02",
   "day": {
-   "d": "2026-10-30",
-   "c": 3876.69,
+   "d": "2026-11-02",
+   "c": 3946.47,
    "score": 2,
    "denom": 4,
    "space": {
-    "pos60": 0.803348900234698,
-    "ma20": 4099.2880000000005,
-    "lower": 3944.6680230759303,
-    "dev20": -5.43016250626939,
-    "below_lower": true,
+    "pos60": 9.245771529508508,
+    "ma20": 4089.5975000000008,
+    "lower": 3922.665437426629,
+    "dev20": -3.499794295159877,
+    "below_lower": false,
     "ok": true
    },
    "momentum": {
-    "prev_low": 4066.36,
-    "prev_date": "2026-10-07",
-    "area_now": 125.63802525768592,
-    "area_prev": 277.0131636806656,
-    "area_div": true,
+    "prev_low": 3870.05,
+    "prev_date": "2026-10-30",
+    "area_now": 23.89836206033894,
+    "area_prev": 125.63802525768592,
+    "area_div": false,
     "dif_higher": false,
-    "shrink": 0,
-    "ok": true
+    "shrink": 1,
+    "ok": false
    },
    "pattern": {
     "small": false,
     "streak": 0,
-    "no_new_low": false,
-    "body_pct": 94.18016518343062,
+    "no_new_low": true,
+    "body_pct": 73.10696095076374,
     "engulf": false,
     "big_yang": false,
     "ok": false
    },
    "volume": {
-    "vol": 237318,
-    "vol_ma20": 206725.17647058822,
-    "ratio": 1.147987894129404,
+    "vol": 325596,
+    "vol_ma20": 213329.11111111112,
+    "ratio": 1.5262614572580082,
     "dry": false,
-    "mild_up": false,
+    "mild_up": true,
     "blowoff": false,
-    "pct": -3.594422602039671,
+    "pct": 1.7999891660153367,
     "measured": true,
-    "ok": false
+    "ok": true
    }
   },
   "window": [
-   {
-    "d": "2026-10-28",
-    "c": 4067.16,
-    "score": 2,
-    "denom": 4,
-    "space": {
-     "pos60": 12.687095118534033,
-     "ma20": 4120.2195,
-     "lower": 4008.137597897118,
-     "dev20": -1.287783332902538,
-     "below_lower": false,
-     "ok": true
-    },
-    "momentum": {
-     "prev_low": 4066.36,
-     "prev_date": "2026-10-07",
-     "area_now": 95.00094836054261,
-     "area_prev": 277.0131636806656,
-     "area_div": true,
-     "dif_higher": true,
-     "shrink": 2,
-     "ok": true
-    },
-    "pattern": {
-     "small": true,
-     "streak": 1,
-     "no_new_low": true,
-     "body_pct": 10.366908965039475,
-     "engulf": false,
-     "big_yang": false,
-     "ok": false
-    },
-    "volume": {
-     "vol": 197994,
-     "vol_ma20": 206162.93333333332,
-     "ratio": 0.9603763237103081,
-     "dry": false,
-     "mild_up": false,
-     "blowoff": false,
-     "pct": 0.1731471652385519,
-     "measured": true,
-     "ok": false
-    }
-   },
    {
     "d": "2026-10-29",
     "c": 4021.23,
@@ -1119,6 +1075,50 @@
      "pct": -3.594422602039671,
      "measured": true,
      "ok": false
+    }
+   },
+   {
+    "d": "2026-11-02",
+    "c": 3946.47,
+    "score": 2,
+    "denom": 4,
+    "space": {
+     "pos60": 9.245771529508508,
+     "ma20": 4089.5975000000008,
+     "lower": 3922.665437426629,
+     "dev20": -3.499794295159877,
+     "below_lower": false,
+     "ok": true
+    },
+    "momentum": {
+     "prev_low": 3870.05,
+     "prev_date": "2026-10-30",
+     "area_now": 23.89836206033894,
+     "area_prev": 125.63802525768592,
+     "area_div": false,
+     "dif_higher": false,
+     "shrink": 1,
+     "ok": false
+    },
+    "pattern": {
+     "small": false,
+     "streak": 0,
+     "no_new_low": true,
+     "body_pct": 73.10696095076374,
+     "engulf": false,
+     "big_yang": false,
+     "ok": false
+    },
+    "volume": {
+     "vol": 325596,
+     "vol_ma20": 213329.11111111112,
+     "ratio": 1.5262614572580082,
+     "dry": false,
+     "mild_up": true,
+     "blowoff": false,
+     "pct": 1.7999891660153367,
+     "measured": true,
+     "ok": true
     }
    }
   ]
