@@ -399,7 +399,8 @@ except Exception:
 _zz_svg = ""
 _zz_note = ""
 try:
-    _zk = json.load(open("data_full.json", encoding="utf-8"))["kline"]
+    # 优先用内存里的 kline：data_full.json 常比它晚一天（update 只更新内存，不落盘）
+    _zk = (data.get("kline") or json.load(open("data_full.json", encoding="utf-8"))["kline"])
     _zi0 = max(range(len(_zk)), key=lambda i: _zk[i]["h"])
     _zs = _zk[_zi0:]
     _zn = len(_zs); _ZTH = 0.15; _ZMS = 4
@@ -524,6 +525,19 @@ try:
     ) % (" → ".join(_zz_hi[1:]), " → ".join(_zz_lo), " / ".join(_zz_up))
 except Exception as _zz_e:
     print("[warn] 阶梯图生成失败：", _zz_e)
+
+# 日线基准日：K 线里可能已经有「今天还没收盘」的一根（伦敦金次日北京 06:00 才收），
+# 而 MA/MACD/雷达/ATR 全部只认已收盘的日线。两者不是同一天时必须让页面说清楚，
+# 否则「日线截至 11-02」会和卡片上的「收盘 3,876（10-30）」直接打架。
+try:
+    import datetime as _dtl
+    _lk = data["kline"]
+    _today_bj = (_dtl.datetime.utcnow() + _dtl.timedelta(hours=8)).strftime("%Y-%m-%d")
+    _last_bar = _lk[-1]["d"]
+    _settled = _lk[-2]["d"] if (_last_bar == _today_bj and len(_lk) > 1) else _last_bar
+    data["dline"] = {"bar": _last_bar, "settled": _settled}
+except Exception:
+    data["dline"] = {}
 
 payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 # 波动率环境单独落一份，给 gha/notify.py 拼推送文案用（2026-10-30）
@@ -1007,7 +1021,7 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
       <span style="color:#8b949e">（第一段只用了 2 个交易日 —— 2026-01-30 单日 -9.6%，是 20 年最大单日跌幅，属闪崩例外，不能当模板。）</span>
       所以别等某天一根大阴线结束一切 —— 按前三段的节奏推演，<b style="color:#e8c35a">3,800 附近更可能是一次 20% 反弹的起点，而不是终点</b>。
       <span style="color:#5a6371">这是节奏推演，不是承诺；如果节奏变了（比如直接放量破位），以信号为准。</span>
-      本轮从顶到现在已走 <b style="color:#e6edf3">195 个交易日（约 9 个月）</b>，是 20 年同级调整（回撤 ≥18%，共 8 段）中位耗时 <b>110 个交易日（约 5.1 个月）</b>的 <b>1.8 倍</b>，
+      本轮从顶到现在已走 <b style="color:#e6edf3">__NDAYS__</b>，是 20 年同级调整（回撤 ≥18%，共 8 段）中位耗时 <b>110 个交易日（约 5.1 个月）</b>的 <b>__TMULT__ 倍</b>，
       也超过了 20 年里最长的一段（2012-10→2013-06，190 个交易日）—— 时间上已无更长的先例。
       <br>能确认熊市结束的只有一件事：<b style="color:#26a69a">出现一个比前一个更高的高点，并且收盘站上 MA60</b>。
       在那之前，每一次反弹都只是同一件事的重复。
@@ -1045,10 +1059,10 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 
     <div class="wt" style="margin-bottom:11px">
       <div class="wtr"><div class="wtc a">振幅变高</div>
-        <div class="wtc b"><b style="color:#26a69a">已经兑现</b>：60 日均振幅 2.05%，历史 83% 分位，属于高波动档</div>
+        <div class="wtc b"><b style="color:#26a69a">已经兑现</b>：60 日均振幅 __AMP60__%，历史 83% 分位，属于高波动档</div>
         <div class="wtc c">它<b>不是触发条件</b>，只是注释。所以它兑现了也不会让你动 —— 这类条件永远可以被下一个条件替代</div></div>
       <div class="wtr"><div class="wtc a">MA60 收复</div>
-        <div class="wtc b">MA60 在 4291，要价格自己先涨 <b>+6.7%</b> 上来</div>
+        <div class="wtc b">__MA60GAP__</div>
         <div class="wtc c">本系统 20 年数据内，偏离 MA200 ≤-10% 只有 <b>8 次</b>（20 日去重），7 次最终收复，中位 <b>49 个交易日</b> ≈ 2.3 个月。<b style="color:#8b949e">样本仅 8 个，只当参考，不当承诺</b></div></div>
       <div class="wtr"><div class="wtc a">黄灯确认</div>
         <div class="wtc b">10-28 磨底刚到 2/4，<b style="color:#f0524d">10-29 一根阴线掉回 1/4</b> —— 亮两天就灭</div>
@@ -1098,7 +1112,8 @@ table.evt td,table.evt th{font-size:11.5px;padding:6px 8px}
 
     <div style="margin-top:10px;padding:11px 13px;border-radius:7px;border:1px solid #2b3440;background:#0f141b;font-size:11.5px;color:#c9d1d9;line-height:1.9">
       <b style="color:#e8c35a">见底之后还有多长路 —— 这是唯一一张不需要猜底的时间表。</b><br>
-      6 段历史 ≥15% 回撤，从谷底那天起算：站上 MA60 中位 <b>25 个交易日</b>；站上 MA200 中位 <b>65 个交易日</b>；
+      6 段历史 ≥15% 回撤，从谷底那天起算（按<b>连续 3 日站上</b>计；只算单日收盘则 MA60 中位 20 日、MA200 中位 60 日）：
+      站上 MA60 中位 <b>26 个交易日</b>；站上 MA200 中位 <b>64 个交易日</b>；
       收复前高 <b>155 – 2,133 日，中位 683 日（约 2.7 年）</b>。<br>
       含义很直接：<b style="color:#f0524d">即使买在最低点，持有期也要按「2–3 年」准备，不是「几个月」。</b>
       但见底后 60 个交易日，6 段全部为正、中位 <b>+11.7%</b> —— 短期反弹是有的，别因为三个月不涨就否定整笔决定。
@@ -1574,8 +1589,11 @@ function renderTrend(){
     } else if(el){ el.innerHTML = `<span style="color:#5a6371">GLD 数据未取到</span>`; }
   }catch(e){}
   const c = C.active;
+  // 「距前 120 日高」跟着实时价走：这是距离类数字，不能拿上一交易日收盘价算
+  const _cp=(live&&live.price)?live.price:null;
+  const _cd=(_cp&&C.hi120)?(_cp/C.hi120-1)*100:C.dist;
   document.getElementById('tb-chan').innerHTML =
-    `120日高 <b>${C.hi120}</b> · 距 <b class="${c?'tb-warn':'tb-no'}">${C.dist>0?'+':''}${C.dist}%</b> · 上影 <b>${C.upperShadow}%</b><br>` +
+    `120日高 <b>${C.hi120}</b> · 距 <b class="${c?'tb-warn':'tb-no'}">${_cd>0?'+':''}${Number(_cd).toFixed(2)}%</b> · 上影 <b>${C.upperShadow}%</b><br>` +
     (c
       ? `<span class="tb-warn">★ 位置偏高 · 建议暂停加仓（不减仓）</span>`
       : `<span style="color:#5a6371">距前高尚远，无提示</span>`);
@@ -1592,7 +1610,10 @@ function paintHeader(){
   ch.style.color = cls;
   document.getElementById('hi').textContent = fmt(live.high);
   document.getElementById('lo').textContent = fmt(live.low);
-  document.getElementById('op').textContent = fmt(live.open);
+  // 开盘价取当日 K 线的 o —— 接口的 open 字段经常就是当前价，会出现「开 3,964 / 日内低 3,881」这种自相矛盾
+  const _lb = bars.length ? bars[bars.length-1] : null;
+  const _op = (_lb && _lb.d === live.date) ? _lb.o : live.open;
+  document.getElementById('op').textContent = fmt(_op);
   document.getElementById('pc').textContent = fmt(pc);
   document.getElementById('ts').textContent = live.date + ' ' + live.time;
 
@@ -1679,16 +1700,21 @@ function renderRefLow(){
   const px = (live && live.price) || low;
   const fx = E.fx || 6.6525;
   const gap = (px/low - 1) * 100;
+  // 第 2 档的条件写的是「收盘跌破」，所以状态必须用收盘价判，实时价只用来算「现在离多远」。
+  // 否则盘中插一下针就报「条件成立」，收盘又收回去，规则等于每天翻一次。
+  const pxClose = (DATA.ma && DATA.ma.close) || (bars.length ? bars[bars.length-1].c : low);
+  const gapC = (pxClose/low - 1) * 100;
   const cnyLow = low * fx / GRAM;
   let cls = 'refbar', tag = '', tone = '#8b949e', sub = '';
-  if(gap > 3){
-    tag = '距参照低点'; sub = `还有 ${gap.toFixed(1)}% 空间 · 第 2 档未激活`;
-  } else if(gap > 0){
-    cls = 'refbar warn'; tag = '逼近参照低点'; tone = '#e8c35a';
-    sub = `只差 ${gap.toFixed(1)}% · 第 2 档待命（第 1 档未执行完不动）`;
-  } else {
+  if(gapC < 0){
     cls = 'refbar broken'; tag = '已跌破参照低点'; tone = '#f0524d';
-    sub = `超出 ${Math.abs(gap).toFixed(1)}% · 第 2 档条件成立（第 1 档未执行完不动）`;
+    sub = `收盘低 ${Math.abs(gapC).toFixed(1)}% · 第 2 档条件成立（第 1 档未执行完不动）`;
+    if(gap >= 0) sub += `<br><span style="color:#26a69a">盘中已收回 ${gap.toFixed(2)}%，等收盘确认才解除</span>`;
+  } else if(gap >= 0 && gap <= 3){
+    cls = 'refbar warn'; tag = '贴着参照低点'; tone = '#e8c35a';
+    sub = `高出 ${gap.toFixed(2)}% · 第 2 档未触发`;
+  } else {
+    tag = '距参照低点'; sub = `在其上方 ${gap.toFixed(1)}% · 第 2 档未激活`;
   }
   box.className = cls;
   box.innerHTML =
@@ -1935,7 +1961,7 @@ function renderMatrix(){
   document.getElementById('distpct').textContent = `共振 ${sc}/3 · ${(sc/3*100).toFixed(0)}%`;
   document.getElementById('pbar').style.width = (sc/3*100)+'%';
   const miss = [];
-  if(!C) miss.push('① MACD 负柱未收窄（当前 '+h0.toFixed(2)+'，前一日 '+h1.toFixed(2)+'，'+(shrinking?'已收窄':'仍在扩大')+'）');
+  if(!C) miss.push('① 信号日 MACD 负柱未在 3 日内收窄（信号日 '+(last.hist_turn?'D+'+last.hist_turn.days+' 才收窄':'未收窄')+'；最新一根 '+(shrinking?'已收窄':'仍在扩大')+' '+h0.toFixed(2)+' vs '+h1.toFixed(2)+'）');
   if(!inLow) miss.push('② 价格未进入近 60 日低位区（当前位置 '+(sp!=null?sp.toFixed(0):'--')+'%，需 ≤20%）');
   const have = [];
   have.push('长下影 '+(A?'已达标 ':'未达标 ')+last.lower_share.toFixed(1)+'%');
@@ -1959,7 +1985,7 @@ function renderRadar(){
   };
   const s1=d.space, s2=d.momentum, s3=d.pattern, s4=d.volume;
   document.getElementById('radarcards').innerHTML =
-    card('空间状态', s1.ok, `60日区间位置 ${s1.pos60.toFixed(0)}%`, `偏离MA20 ${s1.dev20.toFixed(2)}% · 布林下轨 ${s1.below_lower?'已跌破（仅超卖提示）':'未跌破'}`) +
+    card('空间状态', s1.ok, `60日区间位置 ${s1.pos60.toFixed(0)}%<span style="font-size:10px;color:#6e7681;font-weight:400"> · ${d.d.slice(5)} 收盘</span>`, `偏离MA20 ${s1.dev20.toFixed(2)}% · 布林下轨 ${s1.below_lower?'已跌破（仅超卖提示）':'未跌破'}`) +
     card('动能状态', s2.ok, `面积背离 ${s2.area_div?'是':'否'} · 绿柱缩短 ${s2.shrink} 天`, `本次面积 ${s2.area_now!=null?s2.area_now.toFixed(1):'--'} / 上波 ${s2.area_prev!=null?s2.area_prev.toFixed(1):'--'}`) +
     card('形态状态', s3.ok, `小实体连续 ${s3.streak} 天`, `阳包阴 ${s3.engulf?'是':'否'} · 不创新低 ${s3.no_new_low?'是':'否'} · 实体占比 ${s3.body_pct.toFixed(0)}%`) +
     card('量能状态', s4.ok,
@@ -2424,7 +2450,7 @@ function renderMacro(){
       17 年实测：利率 60 日变化与金价未来 60 日收益的相关只有 <b>−0.03</b>（几乎为零）。
       按利率分档统计金价未来一年收益，甚至会得出「利率越高、金价越涨」的反向结论 ——
       因为 2–3% 那一档的样本几乎全部来自 2023 年以后的一段行情，它不是一个有 269 个独立观测的样本，
-      只是<b>一段行情的 269 天</b>。时间序列上做分箱，本质是伪样本 —— 和磨底雷达在 1992–1998 失效是同一类错误。<br>
+      只是<b>一段行情的 269 天</b>。时间序列上做分箱，本质是伪样本 —— 和磨底雷达在 2018 低波动期失效是同一类错误。<br>
       <b style="color:#c9d1d9">所以它的正确用法只有两个</b>：① 知道逆风有多强（现在：17 年 99% 分位，很强）；
       ② 盯背离 —— 利率回落而金价继续跌，说明卖压另有来源，那才是需要重新判断的时候。
     </div>
@@ -2434,7 +2460,7 @@ function renderMacro(){
       <b style="color:#c9d1d9">① VIX 分档没有单调关系</b>：VIX &lt;14 时后 20 日胜率 <b>49%</b>、14–20 时 <b>54%</b>、20–30 时 <b>62%</b>、&gt;30 时 <b>54%</b> —— 基准 55%。
       最该出结论的「VIX &gt;30 恐慌」反而和基准一样，中间那档最高，这只能是噪声。<br>
       <b style="color:#c9d1d9">② GVZ &gt;30 那 126 天，拆开只有 9 段</b>：按日算 T+60 胜率 28%（看起来极强），<b>按段算 56%</b>，和基准 60% 没差别。
-      28% 是 9 段里 3 段跌出来的（2022-03 −10%、2026-01 −3%、2013-04 −8%），不是 126 个独立样本 —— <b>和利率分档、1992–1998 磨底失效是同一个坑，这是第四次</b>。<br>
+      28% 是 9 段里 3 段跌出来的（2022-03 −10%、2026-01 −3%、2013-04 −8%），不是 126 个独立样本 —— <b>和利率分档、2018 低波动期磨底失效是同一个坑，这是第四次</b>。<br>
       <b style="color:#c9d1d9">③ GVZ÷VIX 阈值不稳健</b>：k 从 1.10 挨个测到 1.60，胜率 <b>41 / 50 / 54 / 44 / 30 / 42 / 40 / 55 / 54</b>。
       1.30 刚好是中间那个低点，往上挪 0.05 就变成 42%，挪到 1.50 又变 55%。<b>能靠挪阈值消失的规律，不叫规律。</b><br>
       <span style="color:#c9d1d9">所以这三个数只回答一件事</span>：<b>恐慌有多强、是不是黄金专属</b>。它解释「为什么这次避险买金没兑现」，不告诉你「什么时候会兑现」。
@@ -2534,7 +2560,10 @@ function fillMA200(){
   const E=DATA.ma200env||{}; const v=document.getElementById('m2v'), s=document.getElementById('m2s');
   if(!v||!s) return;
   if(E.dev==null){ v.textContent='--'; s.textContent='数据不足'; return; }
-  const d=E.dev;
+  // 偏离度必须跟卡片上的价格同口径：价格是实时的，偏离也按实时算。
+  // 否则会出现「价格 3,946 · 偏离 -13.7%」这种用 10-30 收盘价算出来的旧数，差 1.6 个点。
+  const _px=(live&&live.price)?live.price:((DATA.trend||{}).close);
+  const d=(_px&&E.ma200)?(_px/E.ma200-1)*100:E.dev;
   let col,lbl;
   if(d<=-15){ col='#f0524d'; lbl='极端低位 · 接近历史极限'; }
   else if(d<=-8){ col='#e8c35a'; lbl='深度低位 · 20 年 3% 分位'; }
@@ -2543,7 +2572,7 @@ function fillMA200(){
   v.innerHTML = `<span style="color:${col}">${d>0?'+':''}${d.toFixed(1)}%</span>`;
   let extra='';
   if(E.slope!=null) extra += `<br>MA200 ${E.ma200} · ${E.slope>=0?'上行 +':'下行 '}${E.slope.toFixed(2)}%`;
-  if(E.p15!=null) extra += `<br>到 -15% 偏离：${E.p15.toFixed(1)}%`;
+  if(E.p15!=null) extra += `<br>到 -15% 偏离：${(_px&&E.ma200?((E.ma200*0.85/_px-1)*100):E.p15).toFixed(1)}%`;
   s.innerHTML = `<span style="color:${col}">${lbl}</span>` +
     (E.pct!=null?`<br>历史 ${E.pct}% 分位${E.min!=null?` · 极值 ${E.min}%`:''}`:'') + extra;
 }
@@ -2570,7 +2599,7 @@ function fillFX(){
   const isLive=!!(live&&live.price&&Math.abs(pxNow-((DATA.trend||{}).close||0))>0.01);
   if(cv) cv.innerHTML=`<span style="color:#e8c35a">${fmt(cnyNow,1)}</span>`;
   if(cs) cs.innerHTML=`元/克 · 汇率 ${fxNow}<br>${isLive?'实时':'收盘'} ${fmt(pxNow,1)} × ${fxNow} ÷ 31.1035`+
-    `<br><span style="color:#6e7681">收盘口径 ${fmt(E.cny,1)} · 距历史最高 ${psign(E.cnyDD,1)}%</span>`;
+    `<br><span style="color:#6e7681">收盘口径 ${fmt(E.cny,1)} · 距历史最高 ${psign(E.cnyHi?((cnyNow/E.cnyHi-1)*100):E.cnyDD,1)}%</span>`;
 
   // 顶部四格
   const hist=(E.rows||[]).find(r=>r.k.indexOf('250')===0)||{};
@@ -2604,10 +2633,14 @@ function fillFX(){
 
   // 关键价位 → 元/克
   h+='<div style="font-size:11.5px;color:#8b949e;margin:11px 0 6px">同样的价位，换成你下单用的<b style="color:#c9d1d9">元/克</b>：</div>';
-  h+='<div class="fxstat" style="margin-bottom:0">'+(E.levels||[]).map(l=>
-    `<div class="fxs"><div class="l">${l.n} · ${fmt(l.usd,1)}</div>`+
-    `<div class="v" style="font-size:15px">${fmt(l.cny,1)}<span style="font-size:10px;font-weight:400;color:#7d8794;margin-left:3px">元/克</span></div>`+
-    `<div class="d" style="color:${pcol(l.gap)}">距现价 ${psign(l.gap,1)}%</div></div>`).join('')+'</div>';
+  h+='<div class="fxstat" style="margin-bottom:0">'+(E.levels||[]).map(l=>{
+    // gap 由 Python 端用「最后收盘价」算出，这里按实时价重算 ——
+    // 否则会出现「参照低点距现价 +1.7%」而实际价格已经站在它上方的情况，方向都是反的。
+    const g=(pxNow&&l.usd)?(l.usd/pxNow-1)*100:l.gap;
+    return `<div class="fxs"><div class="l">${l.n} · ${fmt(l.usd,1)}</div>`+
+      `<div class="v" style="font-size:15px">${fmt(l.cny,1)}<span style="font-size:10px;font-weight:400;color:#7d8794;margin-left:3px">元/克</span></div>`+
+      `<div class="d" style="color:${pcol(g)}">距现价 ${psign(g,1)}%</div></div>`;
+  }).join('')+'</div>';
 
   W.innerHTML=h;
 }
@@ -2662,15 +2695,15 @@ function renderQuickRef(){
   const dsc=(st.m&&st.m.day&&st.m.day.score)||0;
   const lowV=V.grade==='low';
   const R=[
-   ['磨底黄灯','低位（60 日位置 ≤20%）+ 动能衰竭 + 形态企稳；有量能时 3/4 亮，无量能时动能与形态必须同时成立','唯一正式买点：分批建仓，单笔不超过计划仓位的 1/3','1999–2026 共 69 次，T+20 均值 +1.78%、胜率 70%（随机 57%）', dsc>=3, dsc+'/4'],
+   ['磨底黄灯','低位（60 日位置 ≤20%）+ 动能衰竭 + 形态企稳；有量能时 3/4 亮，无量能时动能与形态必须同时成立','唯一正式买点：分批建仓，单笔不超过计划仓位的 1/3','本系统 2006 起样本：T+20 均值 +1.78%、胜率 70%（随机 57%）', dsc>=3, dsc+'/4'],
    ['暴跌雷达','单日大跌 + 放量，急跌进行中','只做 T 的参考，不是买点','历史 5 次里 3 次是下跌中继，接刀要快', !!st.crash, st.crash?'触发':'—'],
    ['超买灯','超买 + 动量透支，不等于见顶','别追高、别加仓；卖出不看它','亮灯后 60 日跌 ≥8% 仅 9.0%，随机是 21.4%', (st.ts||0)>=3, (st.ts||0)+'/4'],
    ['8% 回撤线','距 250 日最高价回落 8%','最先触发、最可靠的卖出线：先减一半，不等均线确认','5 个大顶 5/5 触发，平均让出 9.7%', !!M.dd8, M.dd8?('破 '+(M.dd8_days||0)+' 日'):'未破'],
    ['MA20 破位','高位（120 日位置 ≥70%）跌破 20 日线','减仓一半；位置 &lt;70% 时静默，视为噪音','低位破位 6 次全部静默，事后都是假警报', !!M.high20break, M.high20break?'已破':'守住'],
    ['MA60 破位','跌破 60 日趋势线','牛·中位→减半；牛·深位 / 过渡·中位→清仓','5 个大顶 5/5 触发，比 8% 线平均多让 0.8 点', !!M.below60, M.below60?('破 '+(M.below60_days||0)+' 日'):'守住'],
    ['ATR 棘轮','从阶段高点回落 2.5 倍 ATR','追踪止盈，只是辅助；破 MA60 后本模块作废','非主力，单独用会卖太早', !!S.trigger, (S.fail?'已失效':(S.trigger?'触发':'未触发'))],
-   ['偏离 MA200','收盘相对 200 日均线的偏离度 · 看「还有多少下跌空间」','不是买卖信号。极低位（≤-15%）时不再砍仓，等企稳','本系统 20 年数据（2006 起）：≤-10% 仅 8 次，T+60 中位 +3.3%，T+250 对半开', (M2.dev!=null&&M2.dev<=-8), (M2.dev!=null?((M2.dev>0?'+':'')+M2.dev.toFixed(1)+'%'):'—')],
-   ['人民币金价','美元金价 ÷ 31.1035 × USD/CNY —— 你买卖的是元/克，不是 USD/oz','所有美元价位都要再过一次汇率才是你的成交价；汇率变动直接进你的盈亏，不进任何一条买卖规则','近 250 日：美元 -2.3% → 人民币 -8.6%，汇率多让 6.3 个点', (F.pct!=null&&(F.pct<=25||F.pct>=75)), (F.fx!=null?F.fx+(F.pct!=null?' · '+F.pct+'%分位':''):'—')],
+   ['偏离 MA200','收盘相对 200 日均线的偏离度 · 看「还有多少下跌空间」','不是买卖信号。极低位（≤-15%）时不再砍仓，等企稳','本系统 20 年数据（2006 起）：≤-10% 仅 8 次，T+60 中位 +3.3%，T+250 对半开', (M2.dev!=null&&M2.dev<=-8), (function(){const p=(live&&live.price)?live.price:null;const dv=(p&&M2.ma200)?(p/M2.ma200-1)*100:M2.dev;return dv!=null?((dv>0?'+':'')+dv.toFixed(1)+'%'):'—';})()],
+   ['人民币金价','美元金价 ÷ 31.1035 × USD/CNY —— 你买卖的是元/克，不是 USD/oz','所有美元价位都要再过一次汇率才是你的成交价；汇率变动直接进你的盈亏，不进任何一条买卖规则',(function(){const r=(F.rows||[]).filter(x=>x.k.indexOf('250')===0)[0];return r?('近 250 日：美元 '+psign(r.usd,1)+'% → 人民币 '+psign(r.cny,1)+'%，汇率多让 '+Math.abs(r.drag).toFixed(1)+' 个点'):'近 250 日：汇率分解未就绪';})(), (F.pct!=null&&(F.pct<=25||F.pct>=75)), (F.fx!=null?((DATA.fx&&+DATA.fx)?+DATA.fx:F.fx)+(F.pct!=null?' · '+F.pct+'%分位':''):'—')],
    ['实际利率','美国 10 年期 TIPS 实际利率 —— 持有黄金的机会成本，扣掉通胀后的无风险收益','<b style="color:#f0524d">不进任何买卖规则</b>：17 年实测与金价 60 日收益相关 −0.03，只用来量逆风有多强','当前 '+(MA.r!=null?MA.r+'%，2010 以来 '+MA.pct+'% 分位':'—'), (MA.pct!=null&&MA.pct>=90), (MA.r!=null?MA.r+'%':'—')],
    ['1H / 4H 蓝灯','短线回调的低吸位','只在 MA20&gt;MA60 时做 T；破 MA60 直接关闭','上涨趋势 5 次净胜率 100%，下跌趋势 29%', !!(st.s1>=2||st.s4>=2), st.s1+'/'+st.s4],
    ['趋势 / 通道','MA20 与 MA60 关系、距前 120 日高','只展示，不参与任何买卖判定','通道提示 105 次，20 日仍 +2.15%，减仓会亏', false, '仅参考'],
@@ -2711,7 +2744,7 @@ function renderPeriods(){
         const cls = st.topBreak?'red':(ts>=3?(muted?'gray':'purple'):(ts>=1?'yellow':'gray'));
         const desc = muted ? '静音 · 仅作参考' : (ts>=3?(st.topBreak?'跌破MA20 · 破位':'超买衰竭'):'未触发');
         return `<div class="pcard ${cls}"${muted?' style="opacity:.62"':''}><div class="pc-l">超买</div><div class="pc-s">${ts}<span style="font-size:11px;color:#6e7681">/4</span></div>
-          <div class="pc-d">${desc}<br>120日位置 ${d.pos120!=null?d.pos120+'%':'--'} · 偏离MA20 ${d.dev20!=null?d.dev20+'%':'--'}${muted?'<br><span style="font-size:9.5px;color:#5a6371">'+(PHASE==='bull'?'牛市 60 日内 77% 会卖飞':'左侧寻底 · 卖出类已静音')+'</span>':''}</div></div>`;
+          <div class="pc-d">${desc}<br>120日位置 ${d.pos120!=null?d.pos120+'%':'--'} · 偏离MA20 ${d.dev20!=null?d.dev20+'%':'--'}<span style="color:#5a6371">（${(DATA.dline||{}).settled||''}）</span>${muted?'<br><span style="font-size:9.5px;color:#5a6371">'+(PHASE==='bull'?'牛市 60 日内 77% 会卖飞':'左侧寻底 · 卖出类已静音')+'</span>':''}</div></div>`;
       })();
 }
 
@@ -3298,7 +3331,13 @@ async function refresh(){
   }
 }
 
-const _dl=document.getElementById('dline'); if(_dl && bars.length) _dl.textContent=bars[bars.length-1].d;
+const _dl=document.getElementById('dline'); if(_dl && bars.length){
+  // bar = K 线最后一根；settled = 已收盘那根（日线指标的实际基准）。
+  // 两者不同就说明今天还没收，必须写成「10-30（11-02 盘中）」，不能只写 11-02。
+  const DL=DATA.dline||{}, _last=bars[bars.length-1].d;
+  const _b=DL.bar||_last, _s=DL.settled||_last;
+  _dl.textContent=(_s&&_b&&_s!==_b)?(_s+'（'+_b+' 盘中）'):_b;
+}
 paintHeader(); renderTrend(); renderSignals(); renderMatrix(); renderRadar(); renderYseq(); renderCrash(); renderBacktest(); renderUpgrade(); renderTopReview(); renderTrailReview(); renderTripleReview(); paintTable(); initAlerts(); initCheat(); initTools(); drawK(); drawMACD(); drawVol(); drawRadar();
 window.addEventListener('resize', ()=>{drawK();drawMACD();drawVol();drawRadar();});
 setInterval(refresh, 60000);
@@ -3308,7 +3347,42 @@ setInterval(refresh, 60000);
 """
 
 html = html.replace("__PAYLOAD__", payload)
+
+# ---- 把三处写死的数字改成按当日数据算 ----
+# 原来写的是「195 个交易日 / 2.05% / MA60 在 4291，要涨 +6.7%」，每过一天就错一点，
+# 而且会和页面其它地方（实时价算出来的 8.6%）直接冲突。全部改为从 kline 现算。
+try:
+    _fk = (data.get("kline") or json.load(open("data_full.json", encoding="utf-8"))["kline"])
+    # 基准一律取 kline 最后一根 —— 不用 radar_ma.json 的日期，因为它可能是上一版算的，
+    # 一旦滞后一天，「已走 N 个交易日」和 MA60 会同时算错（实测差出 11 个点）。
+    _ftop = max(range(len(_fk)), key=lambda i: _fk[i]["h"])
+    _fnd = len(_fk) - 1 - _ftop
+    _famp = [(_fk[i]["h"] - _fk[i]["l"]) / _fk[i - 1]["c"] * 100 for i in range(len(_fk) - 60, len(_fk))]
+    _famp60 = sum(_famp) / len(_famp)
+    _fma60 = sum(x["c"] for x in _fk[-60:]) / 60
+    _fbc = _fk[-1]["c"]
+    _fgap60 = (_fbc / _fma60 - 1) * 100
+    html = html.replace("__NDAYS__", "{} 个交易日（约 {:.0f} 个月）".format(_fnd, _fnd / 21.0))
+    html = html.replace("__TMULT__", "{:.1f}".format(_fnd / 110.0))
+    html = html.replace("__AMP60__", "{:.2f}".format(_famp60))
+    html = html.replace("__MA60GAP__",
+                        "MA60 在 {:,.0f}，要价格自己先涨 <b>{:.1f}%</b> 上来".format(_fma60, abs(_fgap60)))
+except Exception as _e:
+    print("[warn] 动态数字填充失败：", _e)
+    html = (html.replace("__NDAYS__", "若干交易日").replace("__TMULT__", "1.8")
+                .replace("__AMP60__", "2.06").replace("__MA60GAP__", "MA60 需先收复"))
 html = html.replace("__ZIGZAG__", _zz_svg).replace("__ZZNOTE__", _zz_note)
+
+# 版本指纹：模板自身 hash + 构建时间（北京），用于核对线上跑的是哪一个包。
+# 只有这一个数会随模板改动而变，所以「线上模板 hash ≠ 本地包模板 hash」就说明跑的是旧包。
+import hashlib, datetime as _dt
+_tpl_hash = hashlib.md5(open(os.path.abspath(__file__), "rb").read()).hexdigest()[:8]
+_bj = _dt.datetime.utcnow() + _dt.timedelta(hours=8)
+_tag = ('<div style="max-width:1180px;margin:26px auto 44px;padding:0 16px;text-align:center;'
+        'font-size:10.5px;color:#4a5563;line-height:1.9;letter-spacing:.2px">'
+        '构建 ' + _bj.strftime("%Y-%m-%d %H:%M") + '（北京）　·　模板 ' + _tpl_hash +
+        '<br><span style="color:#3d4653">模板号与包内不一致，说明线上跑的不是这个包</span></div>')
+html = html.replace("</body>", _tag + "\n</body>")
 path = "index.html"
 open(path, "w", encoding="utf-8").write(html)
 print("written", path, len(html))
