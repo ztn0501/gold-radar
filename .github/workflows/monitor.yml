@@ -1,0 +1,91 @@
+name: gold
+
+on:
+  schedule:
+    # 北京 06:30 = UTC 22:30。伦敦金日线在纽约 17:00 收盘（夏令时 UTC 21:00 / 冬令时 UTC 22:00），
+    # 取 22:30 一年四季都在收盘之后，不用随夏令时调整。
+    - cron: "30 22 * * *"
+    # 只刷新页面价格，不判定、不推送
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  # 固定 group：手动、结算、刷新 三条线全部串行排队。
+  # 原来按 github.event.schedule 分组，两条 cron 的 group 不同 → 会并发 →
+  # 两个 run 同时 deploy-pages，后一个必报 "Deployment failed, try again later"，
+  # 表现就是「1 分 04 秒红叉、3 条 annotation」。
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+      MAIL_USER: ${{ secrets.MAIL_USER }}
+      MAIL_PASS: ${{ secrets.MAIL_PASS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 抓数并生成页面
+        run: |
+          rm -rf gm && mkdir gm
+          # 只认 gold-monitor.zip。找不到就失败，绝不退回 lite / backup 旧包 ——
+          # 旧包能跑完、日志是 success，但页面会静默退回老版，比红叉更难发现。
+          Z=$(ls gold-monitor.zip 2>/dev/null | head -1)
+          if [ -z "$Z" ]; then
+            echo "::error::根目录找不到 gold-monitor.zip —— 上传时不要改文件名"
+            ls -la
+            exit 1
+          fi
+          echo "zip=$Z"
+          unzip -o "$Z" -d gm
+          D=$(dirname "$(find gm -name update.py -print -quit)")
+          cd "$D"
+          cp "$GITHUB_WORKSPACE/alert_state.json" alert_state.json 2>/dev/null || true
+          python3 update.py
+          cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
+          cp index.html "$GITHUB_WORKSPACE/index.html"
+
+      - name: 推送（只在结算那一次）
+        if: github.event.schedule == '30 22 * * *'
+        run: |
+          D=$(dirname "$(find gm -name update.py -print -quit)")
+          cd "$D"
+          python3 gha/notify.py || true
+          cp alert_state.json "$GITHUB_WORKSPACE/alert_state.json" 2>/dev/null || true
+
+      - name: 提交页面
+        run: |
+          git config user.name bot
+          git config user.email bot@users.noreply.github.com
+          git add -A
+          git diff --staged --quiet || git commit -m "update $(date -u +%m-%d_%H:%M)"
+          # 并发时远端可能已经有新 commit，push 会 non-fast-forward。
+          # 先 rebase 再推，最多 3 次。
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" 2>/dev/null || true
+            if git push; then echo "push ok (第 $i 次)"; break; fi
+            echo "::warning::push 失败，第 $i 次，5 秒后重试"
+            sleep 5
+            [ "$i" = "3" ] && exit 1
+          done
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
