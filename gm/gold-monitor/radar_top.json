@@ -5,21 +5,21 @@
  "pattern": false,
  "volume": false,
  "detail": {
-  "pos120": 32.8,
-  "dev20": 1.86,
-  "upper": 4227.55,
-  "close": 4140.94,
-  "ma20": 4065.44,
-  "below_ma20": false,
+  "pos120": 19.7,
+  "dev20": -0.65,
+  "upper": 4215.56,
+  "close": 4032.73,
+  "ma20": 4059.02,
+  "below_ma20": true,
   "touch_upper": false,
   "top_div": false,
   "red_shrink": false,
   "death": false,
-  "upper_shadow": 7.9,
+  "upper_shadow": 6.3,
   "bear_engulf": false,
-  "ret3": 1.99,
-  "vr": 1.11
+  "ret3": -1.37,
+  "vr": 0.84
  },
- "date": "2026-11-09",
+ "date": "2026-11-10",
  "last_top3": null
 }
