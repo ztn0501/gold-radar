@@ -1,44 +1,44 @@
 {
  "h1": {
-  "score": 0,
+  "score": 1,
   "space": false,
-  "momentum": false,
+  "momentum": true,
   "pattern": false,
   "detail": {
-   "pos": 71.7,
-   "shadow": 28.1,
-   "cross": false,
+   "pos": 94.1,
+   "shadow": 49.5,
+   "cross": true,
    "diverge": false,
    "engulf": false,
-   "close": 882.28,
-   "time": "2026-11-10 09:30:00"
+   "close": 888.16,
+   "time": "2026-11-10 10:45:00"
   }
  },
  "h4": {
-  "score": 0,
+  "score": 1,
   "space": false,
   "momentum": false,
-  "pattern": false,
+  "pattern": true,
   "detail": {
-   "pos": 85.6,
-   "shadow": 28.1,
+   "pos": 95.5,
+   "shadow": 4.3,
    "cross": false,
    "diverge": false,
-   "engulf": false,
-   "close": 882.28,
-   "time": "2026-11-10 09:30:00"
+   "engulf": true,
+   "close": 888.16,
+   "time": "2026-11-10 10:45:00"
   }
  },
  "gate": {
   "trend": "down",
   "allow": false,
   "label": "趋势向下，做T信号已关闭",
-  "close": 882.28,
-  "ma20d": 869.36,
-  "ma60d": 916.48,
-  "gap60": -3.73,
+  "close": 888.16,
+  "ma20d": 869.65,
+  "ma60d": 916.58,
+  "gap60": -3.1,
   "bars": 122
  },
- "generated": "2026-11-10 00:43:57",
+ "generated": "2026-11-10 01:51:24",
  "source": "沪金主力 AU0 60m（内盘时段，跨市场代理）"
 }
