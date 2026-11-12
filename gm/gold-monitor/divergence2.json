@@ -2,19 +2,19 @@
  {
   "date": "2026-02-02",
   "low": 4401.58,
-  "dif": 169.3212803570259,
+  "dif": 169.32128789090712,
   "swing": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51970300921585,
+   "prev_dif": 65.5197439674539,
    "lower_low": false,
    "higher_dif": true,
    "is": false
   },
   "area": {
    "prev2_date": "2025-11-18",
-   "area_now": 57.964220599323085,
-   "area_prev": 72.38677641307135,
+   "area_now": 57.96435536891582,
+   "area_prev": 72.38840537126083,
    "lower_low": false,
    "smaller_area": true,
    "is": false
@@ -25,19 +25,19 @@
  {
   "date": "2026-03-23",
   "low": 4099.02,
-  "dif": -101.6456380264317,
+  "dif": -101.64563751688002,
   "swing": {
    "prev_date": "2026-03-03",
    "prev_low": 4996.33,
-   "prev_dif": 105.57859827130505,
+   "prev_dif": 105.57859976795498,
    "lower_low": true,
    "higher_dif": false,
    "is": false
   },
   "area": {
    "prev2_date": "2026-02-17",
-   "area_now": 921.3068094292049,
-   "area_prev": 141.42414068709755,
+   "area_now": 921.306821042127,
+   "area_prev": 141.424152829261,
    "lower_low": true,
    "smaller_area": false,
    "is": false
@@ -48,19 +48,19 @@
  {
   "date": "2026-06-24",
   "low": 3959.04,
-  "dif": -115.85303668762936,
+  "dif": -115.85303668445613,
   "swing": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694829530647,
+   "prev_dif": -109.07694828896638,
    "lower_low": true,
    "higher_dif": false,
    "is": false
   },
   "area": {
    "prev2_date": "2026-05-28",
-   "area_now": 179.67898528857617,
-   "area_prev": 255.52699468572743,
+   "area_now": 179.67898532583717,
+   "area_prev": 255.52699477215685,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -71,19 +71,19 @@
  {
   "date": "2026-10-23",
   "low": 3975.7,
-  "dif": -57.16197808126799,
+  "dif": -57.16197808126526,
   "swing": {
    "prev_date": "2026-10-07",
    "prev_low": 4066.36,
-   "prev_dif": -61.95812682151245,
+   "prev_dif": -61.95812682150245,
    "lower_low": true,
    "higher_dif": true,
    "is": true
   },
   "area": {
    "prev2_date": "2026-09-28",
-   "area_now": 59.721144583895565,
-   "area_prev": 277.013163680336,
+   "area_now": 59.72114458393604,
+   "area_prev": 277.0131636804216,
    "lower_low": true,
    "smaller_area": true,
    "is": true
