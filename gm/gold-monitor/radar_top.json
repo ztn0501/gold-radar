@@ -6,20 +6,20 @@
  "volume": false,
  "detail": {
   "pos120": 0.5,
-  "dev20": -6.31,
-  "upper": 4178.74,
-  "close": 3724.67,
-  "ma20": 3975.46,
+  "dev20": -8.36,
+  "upper": 4208.11,
+  "close": 3625.01,
+  "ma20": 3955.49,
   "below_ma20": true,
   "touch_upper": false,
   "top_div": false,
   "red_shrink": false,
   "death": false,
-  "upper_shadow": 3.2,
+  "upper_shadow": 22.0,
   "bear_engulf": false,
-  "ret3": -4.0,
-  "vr": 0.57
+  "ret3": -6.0,
+  "vr": 0.68
  },
- "date": "2026-11-18",
+ "date": "2026-11-19",
  "last_top3": null
 }
