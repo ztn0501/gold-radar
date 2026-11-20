@@ -10,13 +10,13 @@
   "lower_shadow": 254.8800000000001,
   "lower_shadow_pct": 5.473686018992971,
   "lower_share": 52.785486476411435,
-  "dif": 169.3212364251467,
-  "dea": 175.28874473480565,
-  "hist": -11.935016619317878,
+  "dif": 169.32126168588093,
+  "dea": 175.28878188294382,
+  "hist": -11.935040394125792,
   "div": {
    "prev_date": "2025-11-06",
    "prev_low": 3964.55,
-   "prev_dif": 20.683151863660896,
+   "prev_dif": 20.685709674175996,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -46,8 +46,8 @@
   ],
   "div_area": {
    "prev2_date": "2025-11-18",
-   "area_now": 57.96343472540997,
-   "area_prev": 72.37727760740246,
+   "area_now": 57.963886601193934,
+   "area_prev": 72.38273939793376,
    "lower_low": false,
    "smaller_area": true,
    "is": false
@@ -55,7 +55,7 @@
   "div_swing": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51946417181352,
+   "prev_dif": 65.51960150279956,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -73,13 +73,13 @@
   "lower_shadow": 307.6199999999999,
   "lower_shadow_pct": 6.980828930886114,
   "lower_share": 70.40164778578784,
-  "dif": -101.64564099774361,
-  "dea": -10.451968477843332,
-  "hist": -182.38734503980055,
+  "dif": -101.64563928924599,
+  "dea": -10.451965965346728,
+  "hist": -182.38734664779852,
   "div": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51946417181352,
+   "prev_dif": 65.51960150279956,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -109,8 +109,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-02-17",
-   "area_now": 921.3067417114644,
-   "area_prev": 141.4240698831731,
+   "area_now": 921.3067806490185,
+   "area_prev": 141.4241105952768,
    "lower_low": true,
    "smaller_area": false,
    "is": false
@@ -118,7 +118,7 @@
   "div_swing": {
    "prev_date": "2026-03-03",
    "prev_low": 4996.33,
-   "prev_dif": 105.57858954398489,
+   "prev_dif": 105.57859456217466,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -136,13 +136,13 @@
   "lower_shadow": 39.909999999999854,
   "lower_shadow_pct": 0.9980119781442592,
   "lower_share": 25.611243021241016,
-  "dif": -115.85303670612029,
-  "dea": -100.55098422588652,
-  "hist": -30.604104960467538,
+  "dif": -115.85303669548739,
+  "dea": -100.55098421024991,
+  "hist": -30.604104970474964,
   "div": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694833227015,
+   "prev_dif": -109.07694831101435,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -172,8 +172,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-05-28",
-   "area_now": 179.67898507123707,
-   "area_prev": 255.52699418171937,
+   "area_now": 179.67898519621454,
+   "area_prev": 255.52699447151926,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -181,7 +181,7 @@
   "div_swing": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694833227015,
+   "prev_dif": -109.07694831101435,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -199,13 +199,13 @@
   "lower_shadow": 22.090000000000146,
   "lower_shadow_pct": 0.5525552867959584,
   "lower_share": 38.23783970919188,
-  "dif": -57.161978081291636,
-  "dea": -49.64618075199649,
-  "hist": -15.031594658590294,
+  "dif": -57.161978081277994,
+  "dea": -49.6461807519767,
+  "hist": -15.031594658602586,
   "div": {
    "prev_date": "2026-08-03",
    "prev_low": 4019.05,
-   "prev_dif": -29.913573122389607,
+   "prev_dif": -29.913573121156332,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -235,8 +235,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-09-28",
-   "area_now": 59.72114458367655,
-   "area_prev": 277.01316367985385,
+   "area_now": 59.721144583807515,
+   "area_prev": 277.0131636801342,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -244,7 +244,7 @@
   "div_swing": {
    "prev_date": "2026-10-07",
    "prev_low": 4066.36,
-   "prev_dif": -61.95812682156975,
+   "prev_dif": -61.9581268215361,
    "lower_low": true,
    "higher_dif": true,
    "is": true
