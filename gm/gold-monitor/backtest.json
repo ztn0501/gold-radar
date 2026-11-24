@@ -1984,7 +1984,7 @@
  "counts": {
   "crash_raw": 5,
   "crash": 5,
-  "mo_raw": 200,
+  "mo_raw": 201,
   "mo": 101,
   "novol": 20,
   "mo4": 13,
@@ -7053,6 +7053,31 @@
    },
    {
     "ratio": 1.2341539658123468,
+    "dry": false,
+    "mild": true,
+    "blow": false
+   }
+  ],
+  "5163": [
+   3,
+   {
+    "space": true,
+    "momentum": true,
+    "pattern": false,
+    "volume": true
+   },
+   {
+    "area_div": true,
+    "shrink": 1,
+    "dif_high": true
+   },
+   {
+    "streak": 0,
+    "engulf": false,
+    "body": 54.60603684829459
+   },
+   {
+    "ratio": 1.0044618195725152,
     "dry": false,
     "mild": true,
     "blow": false
