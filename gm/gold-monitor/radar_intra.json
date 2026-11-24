@@ -5,12 +5,12 @@
   "momentum": false,
   "pattern": false,
   "detail": {
-   "pos": 64.4,
-   "shadow": 11.2,
+   "pos": 64.0,
+   "shadow": 18.1,
    "cross": false,
    "diverge": false,
    "engulf": false,
-   "close": 782.6,
+   "close": 782.44,
    "time": "2026-11-24 13:45:00"
   }
  },
@@ -20,12 +20,12 @@
   "momentum": false,
   "pattern": false,
   "detail": {
-   "pos": 30.5,
-   "shadow": 11.2,
+   "pos": 30.3,
+   "shadow": 18.1,
    "cross": false,
    "diverge": false,
    "engulf": false,
-   "close": 782.6,
+   "close": 782.44,
    "time": "2026-11-24 13:45:00"
   }
  },
@@ -33,12 +33,12 @@
   "trend": "down",
   "allow": false,
   "label": "趋势向下，做T信号已关闭",
-  "close": 782.6,
+  "close": 782.44,
   "ma20d": 835.62,
-  "ma60d": 883.83,
-  "gap60": -11.45,
+  "ma60d": 883.82,
+  "gap60": -11.47,
   "bars": 122
  },
- "generated": "2026-11-24 03:18:17",
+ "generated": "2026-11-24 04:29:00",
  "source": "沪金主力 AU0 60m（内盘时段，跨市场代理）"
 }
