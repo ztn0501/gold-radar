@@ -10,13 +10,13 @@
   "lower_shadow": 254.8800000000001,
   "lower_shadow_pct": 5.473686018992971,
   "lower_share": 52.785486476411435,
-  "dif": 169.3213129340611,
-  "dea": 175.28885724790794,
-  "hist": -11.935088627693688,
+  "dif": 169.32135370354717,
+  "dea": 175.28891720303136,
+  "hist": -11.935126998968371,
   "div": {
    "prev_date": "2025-11-06",
    "prev_low": 3964.55,
-   "prev_dif": 20.69089887147038,
+   "prev_dif": 20.695027025954914,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -46,8 +46,8 @@
   ],
   "div_area": {
    "prev2_date": "2025-11-18",
-   "area_now": 57.964803352214574,
-   "area_prev": 72.39382007253249,
+   "area_now": 57.9655326553509,
+   "area_prev": 72.40263504241487,
    "lower_low": false,
    "smaller_area": true,
    "is": false
@@ -55,7 +55,7 @@
   "div_swing": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51988011552476,
+   "prev_dif": 65.52010176042495,
    "lower_low": false,
    "higher_dif": true,
    "is": false
@@ -73,13 +73,13 @@
   "lower_shadow": 307.6199999999999,
   "lower_shadow_pct": 6.980828930886114,
   "lower_share": 70.40164778578784,
-  "dif": -101.64563582309984,
-  "dea": -10.45196086807144,
-  "hist": -182.3873499100568,
+  "dif": -101.64563306567379,
+  "dea": -10.451956813033036,
+  "hist": -182.3873525052815,
   "div": {
    "prev_date": "2025-12-31",
    "prev_low": 4274.44,
-   "prev_dif": 65.51988011552476,
+   "prev_dif": 65.52010176042495,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -109,8 +109,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-02-17",
-   "area_now": 921.3068596443009,
-   "area_prev": 141.4241931906925,
+   "area_now": 921.3069224874462,
+   "area_prev": 141.42425889786008,
    "lower_low": true,
    "smaller_area": false,
    "is": false
@@ -118,7 +118,7 @@
   "div_swing": {
    "prev_date": "2026-03-03",
    "prev_low": 4996.33,
-   "prev_dif": 105.57860474292102,
+   "prev_dif": 105.57861284201499,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -136,13 +136,13 @@
   "lower_shadow": 39.909999999999854,
   "lower_shadow_pct": 0.9980119781442592,
   "lower_share": 25.611243021241016,
-  "dif": -115.853036673916,
-  "dea": -100.55098417852776,
-  "hist": -30.604104990776477,
+  "dif": -115.85303665675474,
+  "dea": -100.55098415329124,
+  "hist": -30.604105006927,
   "div": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694826789339,
+   "prev_dif": -109.07694823358997,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -172,8 +172,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-05-28",
-   "area_now": 179.678985449741,
-   "area_prev": 255.52699505945418,
+   "area_now": 179.6789856514213,
+   "area_prev": 255.5269955271757,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -181,7 +181,7 @@
   "div_swing": {
    "prev_date": "2026-06-11",
    "prev_low": 4023.85,
-   "prev_dif": -109.07694826789339,
+   "prev_dif": -109.07694823358997,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -199,13 +199,13 @@
   "lower_shadow": 22.090000000000146,
   "lower_shadow_pct": 0.5525552867959584,
   "lower_share": 38.23783970919188,
-  "dif": -57.16197808125071,
-  "dea": -49.646180751937706,
-  "hist": -15.031594658626005,
+  "dif": -57.1619780812307,
+  "dea": -49.64618075190654,
+  "hist": -15.031594658648316,
   "div": {
    "prev_date": "2026-08-03",
    "prev_low": 4019.05,
-   "prev_dif": -29.91357311865613,
+   "prev_dif": -29.913573116666157,
    "lower_low": true,
    "higher_dif": false,
    "is": false
@@ -235,8 +235,8 @@
   ],
   "div_area": {
    "prev2_date": "2026-09-28",
-   "area_now": 59.721144584061605,
-   "area_prev": 277.0131636807007,
+   "area_now": 59.721144584266355,
+   "area_prev": 277.0131636811464,
    "lower_low": true,
    "smaller_area": true,
    "is": true
@@ -244,7 +244,7 @@
   "div_swing": {
    "prev_date": "2026-10-07",
    "prev_low": 4066.36,
-   "prev_dif": -61.958126821469705,
+   "prev_dif": -61.958126821416954,
    "lower_low": true,
    "higher_dif": true,
    "is": true
